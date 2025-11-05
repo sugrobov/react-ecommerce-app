@@ -1,5 +1,7 @@
 import { mockCategories, mockProducts, mockProductImages, mockProductVariations } from "./mockData";
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const API_BASE = '';
 const USE_MOCK_DATA = true; // переключатель между API и MOCK 
 
@@ -42,6 +44,7 @@ const searchProducts = (products, query) => {
 export const api = {
     async getCategories() {
         if (USE_MOCK_DATA) {
+            await delay(300);
             return mockCategories;
         }
 
