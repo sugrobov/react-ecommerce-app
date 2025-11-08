@@ -8,33 +8,42 @@ const CategoryList = ({ selectedCategory, onSelectCategory }) => {
         queryFn: api.getCategories
     });
 
-    if (isLoading) return <div className="animate-pulse">Загрузка категорий...</div>;
-    if (error) return <div>Ошибка загрузки категорий</div>;
+    if (isLoading) return (
+        <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-8 bg-gray-200 rounded animate-pulse"></div>
+            ))}
+        </div>
+    );
+
+    if (error) return <div className="text-red-500 text-sm">Ошибка загрузки категорий</div>;
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-4">
-            <h2 className="text-lg font-semibold mb-4">Категории</h2>
-            <button
-                onClick={() => onSelectCategory(null)}
-                className={`w-full text-left px-3 py-2 rounded-lg mb-2 ${selectedCategory === null
+        <div>
+            <h2 className="text-lg font-semibold mb-4 hidden lg:block">Категории</h2>
+            <div className="space-y-1">
+                <button
+                    onClick={() => onSelectCategory(null)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm ${selectedCategory === null
                         ? 'bg-blue-500 text-white'
                         : 'hover:bg-gray-100'
-                    }`}
-            >
-                Все товары
-            </button>
-            {categories?.map(category => (
-                <button
-                    key={category.id}
-                    onClick={() => onSelectCategory(category.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg mb-2 ${selectedCategory === category.id
-                            ? 'bg-blue-500 text-white'
-                            : 'hover:bg-gray-100'
                         }`}
                 >
-                    {category.name}
+                    Все товары
                 </button>
-            ))}
+                {categories?.map(category => (
+                    <button
+                        key={category.id}
+                        onClick={() => onSelectCategory(category.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm ${selectedCategory === category.id
+                            ? 'bg-blue-500 text-white'
+                            : 'hover:bg-gray-100'
+                            }`}
+                    >
+                        {category.name}
+                    </button>
+                ))}
+            </div>
         </div>
     )
 
