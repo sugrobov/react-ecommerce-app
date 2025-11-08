@@ -39,3 +39,5 @@ const CategoryList = ({ selectedCategory, onSelectCategory }) => {
     )
 
 }
+
+export default CategoryList;

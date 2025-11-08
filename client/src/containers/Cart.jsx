@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeItemFromCart, updateItemQuantity, clearCart } from "../store/cartSlice";
-import CheckoutForm from "./CheckoutForm";
+import CheckoutForm  from "./CheckoutForm";
 
 
 const Cart = ({ onClose }) => {
@@ -105,3 +105,5 @@ const Cart = ({ onClose }) => {
 
 
 }
+
+export default Cart;
