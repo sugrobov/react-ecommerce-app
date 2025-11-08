@@ -1,15 +1,16 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import SearchBar from '../SearchBar';
 import { setSearchQuery } from '../../store/uiSlice';
 
 const Header = ({ onCartClick, onMenuToggle }) => {
     const dispatch = useDispatch();
-    const { searchQuery } = useSelector(state => state.ui);
+    // const { searchQuery } = useSelector(state => state.ui);
 
-    const handleSearch = (query) => {
+    // Обработчик поиска - используем useCallback для оптимизации 
+    const handleSearch = useCallback((query) => {
         dispatch(setSearchQuery(query));
-    }
+    }, [dispatch]);
 
     return (
         <header className="bg-white shadow-sm">

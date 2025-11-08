@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setCategory, setSearchQuery } from '../store/uiSlice';
 // import CategoryList from '../components/CategoryList';
@@ -18,23 +18,26 @@ function App() {
   const [showCart, setShowCart] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const handleCategorySelect = (categoryId) => {
+  const handleCategorySelect = useCallback((categoryId) => {
     dispatch(setCategory(categoryId));
     setShowMobileMenu(false); // Закрываем мобильное меню при выборе категории
-  };
+  }, [dispatch]);
 
-  const handleCartClick = () => {
+  const handleCartClick = useCallback(() => {
     setShowCart(true);
-  };
+}, []);
 
-  const handleMenuToggle = () => {
-    setShowMobileMenu(!showMobileMenu);
-  };
+  const handleMenuToggle = useCallback(() => {
+    setShowMobileMenu(prev => !prev);
+  }, []);
 
-  const handleCloseMobileMenu = () => {
+  const handleCloseMobileMenu = useCallback(() => {
     setShowMobileMenu(false);
-  };
+  }, []);
 
+    const handleCloseCart = useCallback(() => {
+    setShowCart(false);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -60,7 +63,7 @@ function App() {
       <Footer />
 
       {showCart && (
-        <Cart onClose={() => setShowCart(false)} />
+        <Cart onClose={handleCloseCart} />
       )}
     </div>
 

@@ -22,6 +22,8 @@ const ProductList = ({ categoryId, searchQuery }) => {
             if (lastPage.length < 10) return undefined;
             return allPages.length * 10;
         },
+        // стабилизация во избежания дублирования запросов
+        staleTime: 5 * 60 * 1000, // 5 минут
     });
 
     const products = data?.pages.flat() || [];
