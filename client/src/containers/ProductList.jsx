@@ -10,20 +10,22 @@ const ProductList = ({ categoryId, searchQuery }) => {
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
-        status
+        status,
+        error
     } = useInfiniteQuery({
         queryKey: ['products', categoryId, searchQuery],
         queryFn: ({ pageParam = 0 }) => {
             const filters = categoryId ? { category_id: categoryId } : {};
             return api.getProducts([pageParam, pageParam + 9], filters, searchQuery)
         },
-        getNextPageParam: (lastsPage, allPages) => {
-            if (lastsPage.length < 10) return undefined;
+        getNextPageParam: (lastPage, allPages) => {
+            if (lastPage.length < 10) return undefined;
             return allPages.length * 10;
         },
     });
 
     const products = data?.pages.flat() || [];
+    
     if (status === 'loading') {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -40,7 +42,7 @@ const ProductList = ({ categoryId, searchQuery }) => {
     }
 
     if (status === 'error') {
-        return <div className="text-center text-red-500">Ошибка загрузки товаров</div>;
+        return <div className="text-center text-red-500">Ошибка загрузки товаров: {error.message}</div>;
     }
 
     return (
