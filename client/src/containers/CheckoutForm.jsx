@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart } from "../store/cartSlice";
+import Button from "../components/Ui/Button";
 
 const CheckoutForm = ({ onClose }) => {
     const dispatch = useDispatch();
@@ -12,11 +13,23 @@ const CheckoutForm = ({ onClose }) => {
         time: ''
     });
 
-    const handleSubmit = (e) => {
+    const handleChange = (e) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
         });
+    }
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+
+        dispatch(clearCart());
+        onClose();
+
     }
 
     return (
@@ -90,16 +103,18 @@ const CheckoutForm = ({ onClose }) => {
                         </div>
 
                         <div className="flex space-x-4">
-                            <button
+                            <Button
                                 type="button"
+                                variant="secondary"
                                 onClick={onClose}
-                                className="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600"
+                                className="flex-1"
                             >
                                 Назад
-                            </button>
+                            </Button>
                             <button
                                 type="submit"
-                                className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600"
+                                variant="primary"
+                                className="flex-1"
                             >
                                 Сделать заказ
                             </button>

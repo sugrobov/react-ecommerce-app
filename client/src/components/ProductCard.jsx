@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../services/api";
 import { addItemToCart } from "../store/cartSlice";
+import Button from "./Ui/Button";
 
 const ProductCard = ({ product }) => {
     const dispatch = useDispatch();
@@ -44,10 +45,11 @@ const ProductCard = ({ product }) => {
             <p className="text-gray-600 text-sm mb-4  line-clamp-2">{product.description}</p>
             <div className="flex justify-between items-center">
                 <span className="text-xl font-bold text-blue-600">{price}</span>
-                <button
+                <Button
+                    variant="success"
+                    size="small"
                     onClick={handleAddToCard}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm md:text-base"
-                >В корзину</button>
+                >В корзину</Button>
             </div>
 
         </div>

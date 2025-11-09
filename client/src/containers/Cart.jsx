@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { removeItemFromCart, updateItemQuantity, clearCart } from "../store/cartSlice";
-import CheckoutForm  from "./CheckoutForm";
+import CheckoutForm from "./CheckoutForm";
+import Button from "../components/Ui/Button";
 
 
 const Cart = ({ onClose }) => {
@@ -27,9 +28,14 @@ const Cart = ({ onClose }) => {
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-bold">Корзина</h2>
-                        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                        <Button
+                            variant="outline"
+                            size="small"
+                            onClick={onClose}
+                            className="!p-2"
+                        >
                             ✕
-                        </button>
+                        </Button>
                     </div>
 
                     {items.length === 0 ? (
@@ -51,26 +57,31 @@ const Cart = ({ onClose }) => {
                                             <p className="text-blue-600 font-bold">{item.price} ₽</p>
                                         </div>
                                         <div className="flex items-center space-x-2">
-                                            <button
+                                            <Button
+                                                variant="outline"
+                                                size="small"
                                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
+                                                className="!w-8 !h-8 !p-0 rounded-full"
                                             >
                                                 -
-                                            </button>
+                                            </Button>
                                             <span className="w-8 text-center">{item.quantity}</span>
-                                            <button
+                                            <Button
+                                                variant="outline"
+                                                size="small"
                                                 onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                                className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"
+                                                className="!w-8 !h-8 !p-0 rounded-full"
                                             >
                                                 +
-                                            </button>
+                                            </Button>
                                         </div>
-                                        <button
+                                        <Button
+                                            variant="danger"
+                                            size="small"
                                             onClick={() => handleRemove(item.id)}
-                                            className="text-red-500 hover:text-red-700"
                                         >
                                             Удалить
-                                        </button>
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
@@ -82,18 +93,20 @@ const Cart = ({ onClose }) => {
                                 </div>
 
                                 <div className="flex space-x-4">
-                                    <button
+                                    <Button
+                                        variant="secondary"
                                         onClick={() => dispatch(clearCart())}
-                                        className="flex-1 bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600"
+                                        className="flex-1"
                                     >
                                         Очистить корзину
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                        variant="primary"
                                         onClick={() => setShowCheckout(true)}
-                                        className="flex-1 bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600"
+                                        className="flex-1"
                                     >
                                         Оформить заказ
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </>
