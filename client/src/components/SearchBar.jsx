@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useDebounce } from "../hooks/useDebounce";
+import Input from "./Ui/Input";
+import Button from "./Ui/Button";
 
 const SearchBar = ({ onSearch }) => {
     const [query, setQuery] = useState('');
@@ -11,6 +13,9 @@ const SearchBar = ({ onSearch }) => {
         onSearch('');
     }, [onSearch]);
 
+    const handleChange = (e) => {
+        setQuery(e.target.value);
+    };
 
     useEffect(() => {
         onSearch(debouncedQuery)
@@ -19,21 +24,26 @@ const SearchBar = ({ onSearch }) => {
 
     return (
         <div className="relative">
-            <input
+            <Input
                 type="text"
                 placeholder="Поиск товаров..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />      {query && (
-                <button
-                    onClick={handleClear}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                    ✕
-                </button>
-            )}
-
+                onChange={handleChange}
+                size="medium"
+                className="w-64 pr-10" // отступ для иконки
+                icon={
+                    query && (
+                        <Button
+                            variant="outline"
+                            size="small"
+                            onClick={handleClear}
+                            className="!p-1 !min-w-0 h-6 w-6 rounded-full"
+                        >
+                            ✕
+                        </Button>
+                    )
+                }
+            />
         </div>
     );
 

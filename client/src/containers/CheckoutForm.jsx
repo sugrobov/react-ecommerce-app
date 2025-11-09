@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart } from "../store/cartSlice";
 import Button from "../components/Ui/Button";
+import Input from "../components/Ui/Input";
 
 const CheckoutForm = ({ onClose }) => {
     const dispatch = useDispatch();
@@ -43,7 +44,7 @@ const CheckoutForm = ({ onClose }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Имя *
                             </label>
-                            <input
+                            <Input
                                 type="text"
                                 name="name"
                                 value={formData.name}
@@ -57,7 +58,7 @@ const CheckoutForm = ({ onClose }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Адрес *
                             </label>
-                            <input
+                            <Input
                                 type="text"
                                 name="address"
                                 value={formData.address}
@@ -71,7 +72,7 @@ const CheckoutForm = ({ onClose }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Телефон *
                             </label>
-                            <input
+                            <Input
                                 type="tel"
                                 name="phone"
                                 value={formData.phone}
@@ -85,7 +86,7 @@ const CheckoutForm = ({ onClose }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Время доставки *
                             </label>
-                            <input
+                            <Input
                                 type="time"
                                 name="time"
                                 value={formData.time}
