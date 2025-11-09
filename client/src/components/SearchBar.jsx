@@ -38,6 +38,7 @@ const SearchBar = ({ onSearch }) => {
                             size="small"
                             onClick={handleClear}
                             className="!p-1 !min-w-0 h-6 w-6 rounded-full"
+                            aria-label="Очистить поиск"
                         >
                             ✕
                         </Button>

@@ -33,6 +33,7 @@ const Cart = ({ onClose }) => {
                             size="small"
                             onClick={onClose}
                             className="!p-2"
+                            aria-label="Закрыть корзину"
                         >
                             ✕
                         </Button>
