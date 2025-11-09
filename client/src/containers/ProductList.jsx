@@ -30,7 +30,7 @@ const ProductList = ({ categoryId, searchQuery }) => {
     
     if (status === 'loading') {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {[...Array(6)].map((_, i) => (
                     <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
                         <div className="bg-gray-300 h-48 rounded-lg mb-4"></div>
@@ -48,14 +48,14 @@ const ProductList = ({ categoryId, searchQuery }) => {
     }
 
     return (
-        <div>
+        <div className="w-full">
             {products.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                     Товары не найдены
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full">
                         {products.map(product => (
                             <ProductCard key={product.id} product={product} />
                         ))}

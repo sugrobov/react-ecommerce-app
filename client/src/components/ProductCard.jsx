@@ -32,7 +32,7 @@ const ProductCard = ({ product }) => {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4">
+        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 w-full">
             {imageUrl && (
                 <img
                     src={imageUrl}
@@ -41,12 +41,12 @@ const ProductCard = ({ product }) => {
                 />
             )}
             <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-            <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+            <p className="text-gray-600 text-sm mb-4  line-clamp-2">{product.description}</p>
             <div className="flex justify-between items-center">
                 <span className="text-xl font-bold text-blue-600">{price}</span>
                 <button
                     onClick={handleAddToCard}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors text-sm md:text-base"
                 >В корзину</button>
             </div>
 
