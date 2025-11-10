@@ -1,5 +1,6 @@
 import React from 'react';
 import CategoryList from '../CategoryList';
+import Button from './Button';
 
 const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
   return (
@@ -15,7 +16,7 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
       {/* Боковая панель */}
       <div className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-64 bg-white shadow-lg lg:shadow-none
+        w-64 bg-gray-50 border-r border-gray-200 lg:shadow-none
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
@@ -23,12 +24,15 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
           <div className="p-4">
             <div className="flex justify-between items-center mb-4 lg:hidden">
               <h2 className="text-lg font-semibold">Меню</h2>
-              <button 
+              <Button 
+                variant="outline"
+                size="small"
                 onClick={onClose}
-                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                className="!p-2"
+                aria-label="Закрыть меню"
               >
                 ✕
-              </button>
+              </Button>
             </div>
             
             <CategoryList 
