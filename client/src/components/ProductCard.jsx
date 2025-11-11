@@ -33,13 +33,15 @@ const ProductCard = ({ product }) => {
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4 w-full">
+        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-4 w-full group">
             {imageUrl && (
+                <div className="overflow-hidden rounded-lg mb-4 h-48 flex items-center justify-center bg-gray-50 p-4">
                 <img
                     src={imageUrl}
                     alt={product.name}
-                    className="w-full h-48 object-cover rounded-lg mb-4"
+                    className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
+                </div>
             )}
             <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
             <p className="text-gray-600 text-sm mb-4  line-clamp-2">{product.description}</p>
