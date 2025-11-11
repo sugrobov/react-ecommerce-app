@@ -1,10 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setCategory, setSearchQuery } from '../store/uiSlice';
-// import CategoryList from '../components/CategoryList';
-// import ProductList from './ProductList';
-// import SearchBar from '../components/SearchBar';
-// import Cart from './Cart';
+import { setCategory } from '../store/uiSlice';
 
 import Header from '../components/Ui/Header';
 import Side from '../components/Ui/Side';
