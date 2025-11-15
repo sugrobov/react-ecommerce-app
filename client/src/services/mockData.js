@@ -164,12 +164,17 @@ export const mockProducts = [
 ];
 
 export const mockProductImages = [
-    { id: 1, product_id: 1, image_url: generateProductImage("iPhone") },
-    { id: 2, product_id: 2, image_url: generateProductImage("MacBook") },
+    { id: 1, product_id: 1, image_url: generateProductImage("iPhone Front") },
+    { id: 101, product_id: 1, image_url: generateProductImage("iPhone Back") },
+    { id: 102, product_id: 1, image_url: generateProductImage("iPhone Side") },
+
+    { id: 2, product_id: 2, image_url: generateProductImage("MacBook Open") },
+    { id: 201, product_id: 2, image_url: generateProductImage("MacBook Closed") },
+
     { id: 3, product_id: 3, image_url: generateProductImage("T-Shirt") },
     { id: 4, product_id: 4, image_url: generateProductImage("Jeans") },
-    { id: 5, product_id: 5, image_url: generateProductImage("JS+Book") },
-    { id: 6, product_id: 6, image_url: generateProductImage("React+Book") },
+    { id: 5, product_id: 5, image_url: generateProductImage("JS Book") },
+    { id: 6, product_id: 6, image_url: generateProductImage("React Book") },
     { id: 7, product_id: 7, image_url: generateProductImage("Treadmill") },
     { id: 8, product_id: 8, image_url: generateProductImage("Dumbbells") },
     { id: 9, product_id: 9, image_url: generateProductImage("Coffee+Machine") },
