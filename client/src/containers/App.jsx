@@ -8,7 +8,7 @@ import Side from '../components/Ui/Side';
 import Content from '../components/Ui/Content';
 import Footer from '../components/Ui/Footer';
 import Cart from './Cart';
-import ProductPage from '../components/ProductPage';
+import { routes } from '../routes/index';
 
 function App() {
   const dispatch = useDispatch();
@@ -54,15 +54,13 @@ function App() {
 
         <main className="flex-1 p-4">
           <Routes>
-            <Route
-              path="/"
-              element={
-                <Content
-                  categoryId={selectedCategory}
-                  searchQuery={searchQuery}
-                />}
-            />
-            <Route path="/product/:id" element={<ProductPage />} />
+            {routes.map((route, index) => (
+              <Route
+                key={index}
+                path={route.path}
+                element={route.element}
+              />
+            ))}
           </Routes>
         </main>
       </div>
