@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { Routes, Route } from 'react-router-dom';
 import { setCategory } from '../store/uiSlice';
 
 import Header from '../components/Ui/Header';
@@ -7,6 +8,7 @@ import Side from '../components/Ui/Side';
 import Content from '../components/Ui/Content';
 import Footer from '../components/Ui/Footer';
 import Cart from './Cart';
+import ProductPage from '../components/ProductPage';
 
 function App() {
   const dispatch = useDispatch();
@@ -21,7 +23,7 @@ function App() {
 
   const handleCartClick = useCallback(() => {
     setShowCart(true);
-}, []);
+  }, []);
 
   const handleMenuToggle = useCallback(() => {
     setShowMobileMenu(prev => !prev);
@@ -31,7 +33,7 @@ function App() {
     setShowMobileMenu(false);
   }, []);
 
-    const handleCloseCart = useCallback(() => {
+  const handleCloseCart = useCallback(() => {
     setShowCart(false);
   }, []);
 
@@ -50,10 +52,19 @@ function App() {
           onClose={handleCloseMobileMenu}
         />
 
-        <Content
-          categoryId={selectedCategory}
-          searchQuery={searchQuery}
-        />
+        <main className="flex-1 p-4">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Content
+                  categoryId={selectedCategory}
+                  searchQuery={searchQuery}
+                />}
+            />
+            <Route path="/product/:id" element={<ProductPage />} />
+          </Routes>
+        </main>
       </div>
 
       <Footer />

@@ -93,9 +93,10 @@ export const api = {
 
     async getProductImages(productIds) {
         if (USE_MOCK_DATA) {
-
+            await delay(300);
+            const numericIds = productIds.map(id => parseInt(id));
             return mockProductImages.filter(img =>
-                productIds.includes(img.product_id)
+                numericIds.includes(img.product_id)
             );
         }
 
@@ -108,15 +109,17 @@ export const api = {
             return await response.json();
         } catch (error) {
             console.warn('Using mock data due to API error:', error);
-            return mockProductImages.filter(img => productIds.includes(img.product_id));
+            const numericIds = productIds.map(id => parseInt(id));
+            return mockProductImages.filter(img => numericIds.includes(img.product_id));
         }
     },
 
     async getProductVariations(productIds) {
         if (USE_MOCK_DATA) {
-
+            await delay(300);
+            const numericIds = productIds.map(id => parseInt(id));
             return mockProductVariations.filter(variation =>
-                productIds.includes(variation.product_id)
+                numericIds.includes(variation.product_id)
             );
         }
 
@@ -129,11 +132,29 @@ export const api = {
             return await response.json();
         } catch (error) {
             console.warn('Using mock data due to API error:', error);
+            const numericIds = productIds.map(id => parseInt(id));
             return mockProductVariations.filter(variation =>
-                productIds.includes(variation.product_id)
+                numericIds.includes(variation.product_id)
             );
         }
     },
+
+    async getProduct(id) {
+        if (USE_MOCK_DATA) {
+            await delay(300);
+            return mockProducts.find(product => product.id === parseInt(id));
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/Products/${id}`);
+            if (!response.ok) throw new Error('API error');
+            return await response.json();
+        } catch (error) {
+            console.warn('Using mock data due to API error:', error);
+            return mockProducts.find(product => product.id === parseInt(id));
+        }
+    },
+
 }
 
 
