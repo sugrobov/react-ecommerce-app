@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
 import { api } from "../services/api";
+import { addItemToCart } from "../store/cartSlice";
 import Button from "./Ui/Button";
 
 const ProductPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
 
@@ -32,6 +35,21 @@ const ProductPage = () => {
         queryKey: ['categories'],
         queryFn: () => api.getCategories()
     });
+
+    const handleAddToCart = () => {
+        if (product && variations?.[0]) {
+            dispatch(addItemToCart({
+                id: product.id,
+                name: product.name,
+                price: variations[0].price,
+                image: images?.[0]?.image_url
+            }));
+        }
+    };
+
+    const handleBackClick = () => {
+        navigate(-1);
+    };
 
     if (productLoading || variationsLoading || imagesLoading) return
     (
@@ -71,13 +89,16 @@ const ProductPage = () => {
     };
 
     return (
-        <div className="container mx-auto p-4 max-w-6xl">
-            <button
-                onClick={() => navigate(-1)}
-                className="mb-4 flex items-center text-blue-600 hover:text-blue-800"
+             <div className="container mx-auto p-4 max-w-6xl">
+            {/* Кнопка "Назад" */}
+            <Button
+                variant="outline"
+                size="small"
+                onClick={handleBackClick}
+                className="mb-4 flex items-center"
             >
                 ← Назад
-            </button>
+            </Button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Блок с изображениями */}
@@ -95,20 +116,24 @@ const ProductPage = () => {
                                 {/* Навигационные стрелки */}
                                 {productImages.length > 1 && (
                                     <>
-                                        <button
+                                        <Button
+                                            variant="outline"
+                                            size="small"
                                             onClick={prevImage}
-                                            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all"
+                                            className="absolute left-4 top-1/2 transform -translate-y-1/2 !w-10 !h-10 !p-0 rounded-full shadow-lg"
                                             aria-label="Предыдущее изображение"
                                         >
                                             ‹
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="small"
                                             onClick={nextImage}
-                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all"
+                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 !w-10 !h-10 !p-0 rounded-full shadow-lg"
                                             aria-label="Следующее изображение"
                                         >
                                             ›
-                                        </button>
+                                        </Button>
                                     </>
                                 )}
                             </div>
@@ -117,10 +142,12 @@ const ProductPage = () => {
                             {productImages.length > 1 && (
                                 <div className="flex justify-center space-x-3">
                                     {productImages.map((image, index) => (
-                                        <button
+                                        <Button
                                             key={image.id}
+                                            variant="outline"
+                                            size="small"
                                             onClick={() => selectImage(index)}
-                                            className={`w-16 h-16 rounded-lg border-2 transition-all ${index === currentImageIndex
+                                            className={`!w-16 !h-16 !p-0 rounded-lg border-2 transition-all ${index === currentImageIndex
                                                     ? 'border-blue-500 scale-105'
                                                     : 'border-gray-200 hover:border-gray-400'
                                                 }`}
@@ -130,7 +157,7 @@ const ProductPage = () => {
                                                 alt={`${product.name} ${index + 1}`}
                                                 className="w-full h-full object-cover rounded"
                                             />
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             )}
@@ -151,7 +178,7 @@ const ProductPage = () => {
                         )}
                     </div>
 
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-3xl font-bold text-blue-600">
                         {price} ₽
                     </div>
 
@@ -175,7 +202,12 @@ const ProductPage = () => {
                     </div>
 
                     <div className="pt-4">
-                        <Button variant="success" size="large">
+                        <Button 
+                            variant="product" 
+                            size="xlarge"
+                            onClick={handleAddToCart}
+                            className="transform hover:scale-105 transition-transform"
+                        >
                             Добавить в корзину
                         </Button>
                     </div>

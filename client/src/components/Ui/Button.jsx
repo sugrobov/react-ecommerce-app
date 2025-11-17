@@ -19,12 +19,14 @@ const Button = ({
         success: 'bg-green-500 text-white hover:bg-green-600 focus:ring-green-500',
         danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
         outline: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-blue-500',
+        product: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md hover:shadow-lg transition-all duration-200',
     };
 
     const sizeClasses = {
         small: 'px-3 py-1.5 text-sm',
         medium: 'px-4 py-2 text-base',
         large: 'px-6 py-3 text-lg',
+        xlarge: 'px-8 py-4 text-xl font-bold w-full',
     };
 
     const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
