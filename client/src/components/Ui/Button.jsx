@@ -8,10 +8,11 @@ const Button = ({
     size = 'medium',
     disabled = false,
     className = '',
+    badge,  //** для бейджа */
     ...props
 }) => {
 
-    const baseClasses = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+    const baseClasses = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 relative';
 
     const variantClasses = {
         primary: 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500',
@@ -49,6 +50,12 @@ const Button = ({
             {...props}
         >
             {children}
+            {/* Бейдж для отображения количества */}
+            {badge !== undefined && badge !== null && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1 transform scale-100">
+                    {badge > 99 ? '99+' : badge}
+                </span>
+            )}
         </button>
     );
 }
