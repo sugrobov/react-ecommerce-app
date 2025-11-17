@@ -89,8 +89,8 @@ const ProductPage = () => {
     };
 
     return (
-             <div className="container mx-auto p-4 max-w-6xl">
-            {/* Кнопка "Назад" */}
+        <div className="container mx-auto p-4 max-w-6xl">
+            {/* Кнопка "Назад" к странице */}
             <Button
                 variant="outline"
                 size="small"
@@ -105,36 +105,41 @@ const ProductPage = () => {
                 <div>
                     {productImages.length > 0 && (
                         <div className="space-y-4">
-                            {/* Основное изображение */}
-                            <div className="relative overflow-hidden rounded-lg bg-gray-50 h-80 flex items-center justify-center p-4">
-                                <img
-                                    src={productImages[currentImageIndex]?.image_url}
-                                    alt={product.name}
-                                    className="max-h-full max-w-full object-contain"
-                                />
-
-                                {/* Навигационные стрелки */}
+                            {/* Контейнер для изображения и кнопок навигации */}
+                            <div className="flex items-center justify-between space-x-4">
+                                {/* Кнопка "Назад" для изображений */}
                                 {productImages.length > 1 && (
-                                    <>
-                                        <Button
-                                            variant="outline"
-                                            size="small"
-                                            onClick={prevImage}
-                                            className="absolute left-4 top-1/2 transform -translate-y-1/2 !w-10 !h-10 !p-0 rounded-full shadow-lg"
-                                            aria-label="Предыдущее изображение"
-                                        >
-                                            ‹
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="small"
-                                            onClick={nextImage}
-                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 !w-10 !h-10 !p-0 rounded-full shadow-lg"
-                                            aria-label="Следующее изображение"
-                                        >
-                                            ›
-                                        </Button>
-                                    </>
+                                    <Button
+                                        variant="outline"
+                                        size="small"
+                                        onClick={prevImage}
+                                        className="!w-12 !h-12 !p-0 rounded-full shadow-lg flex-shrink-0 bg-white/90 hover:bg-white backdrop-blur-sm"
+                                        aria-label="Предыдущее изображение"
+                                    >
+                                        ‹
+                                    </Button>
+                                )}
+
+                                {/* Основное изображение */}
+                                <div className="relative overflow-hidden rounded-lg bg-gray-50 h-80 flex-1 flex items-center justify-center p-4">
+                                    <img
+                                        src={productImages[currentImageIndex]?.image_url}
+                                        alt={product.name}
+                                        className="max-h-full max-w-full object-contain"
+                                    />
+                                </div>
+
+                                {/* Кнопка "Вперед" для изображений */}
+                                {productImages.length > 1 && (
+                                    <Button
+                                        variant="outline"
+                                        size="small"
+                                        onClick={nextImage}
+                                        className="!w-12 !h-12 !p-0 rounded-full shadow-lg flex-shrink-0 bg-white/90 hover:bg-white backdrop-blur-sm"
+                                        aria-label="Следующее изображение"
+                                    >
+                                        ›
+                                    </Button>
                                 )}
                             </div>
 
@@ -148,8 +153,8 @@ const ProductPage = () => {
                                             size="small"
                                             onClick={() => selectImage(index)}
                                             className={`!w-16 !h-16 !p-0 rounded-lg border-2 transition-all ${index === currentImageIndex
-                                                    ? 'border-blue-500 scale-105'
-                                                    : 'border-gray-200 hover:border-gray-400'
+                                                ? 'border-blue-500 scale-105'
+                                                : 'border-gray-200 hover:border-gray-400'
                                                 }`}
                                         >
                                             <img
@@ -202,8 +207,8 @@ const ProductPage = () => {
                     </div>
 
                     <div className="pt-4">
-                        <Button 
-                            variant="product" 
+                        <Button
+                            variant="product"
                             size="xlarge"
                             onClick={handleAddToCart}
                             className="transform hover:scale-105 transition-transform"
