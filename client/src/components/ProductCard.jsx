@@ -42,39 +42,54 @@ const ProductCard = ({ product }) => {
         navigate(`/product/${product.id}`); // Переход на страницу продукта
     };
 
+    // функция для обрезки текста
+    const truncateText = (text, maxLength) => {
+        if (text.length <= maxLength) return text;
+        return text.substr(0, maxLength) + '...';
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-4 w-full group cursor-pointer"
+                <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-4 w-full group cursor-pointer flex flex-col h-full"
             onClick={handleCardClick}
         >
-            {mainImage && (
-                <div className="relative overflow-hidden rounded-lg mb-4 h-48 flex items-center justify-center bg-gray-50 p-4">
-                    {/* Основное изображение */}
+            {/* Блок изображения */}
+            {mainImage ? (
+                <div className="relative overflow-hidden rounded-lg mb-4 h-48 flex items-center justify-center bg-gray-50 p-4 flex-shrink-0">
                     <img
                         src={mainImage}
                         alt={product.name}
                         className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
                     />
                 </div>
-            )}
-
-            {/* если изображения нет */}
-            {!mainImage && (
-                <div className="relative overflow-hidden rounded-lg mb-4 h-48 flex items-center justify-center bg-gray-100 p-4">
+            ) : (
+                <div className="relative overflow-hidden rounded-lg mb-4 h-48 flex items-center justify-center bg-gray-100 p-4 flex-shrink-0">
                     <span className="text-gray-400">Нет изображения</span>
                 </div>
             )}
 
-            <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{product.description}</p>
-            <div className="flex justify-between items-center">
-                <span className="text-xl font-bold text-blue-600">{price} ₽</span>
-                <Button
-                    variant="success"
-                    size="small"
-                    onClick={handleAddToCard}
-                >
-                    В корзину
-                </Button>
+            {/* Блок контента с фиксированной высотой */}
+            <div className="flex flex-col flex-grow min-h-0">
+                {/* Название товара - максимум 2 строки */}
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2 min-h-[3.5rem]">
+                    {truncateText(product.name, 60)}
+                </h3>
+                
+                {/* Описание - максимум 3 строки */}
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
+                    {product.description ? truncateText(product.description, 120) : 'Описание отсутствует'}
+                </p>
+
+                {/* Цена и кнопка - всегда внизу */}
+                <div className="flex justify-between items-center mt-auto pt-2">
+                    <span className="text-xl font-bold text-blue-600">{price} ₽</span>
+                    <Button
+                        variant="success"
+                        size="small"
+                        onClick={handleAddToCard}
+                    >
+                        В корзину
+                    </Button>
+                </div>
             </div>
         </div>
     )

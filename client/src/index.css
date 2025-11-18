@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+/* Гарантированное ограничение текста для карточек*/
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 2; /* Стандартное свойство */
+    box-orient: vertical; /* Стандартное свойство */
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 3; /* Стандартное свойство */
+    box-orient: vertical; /* Стандартное свойство */
+}
+
+/* Для надежного переноса длинных слов */
+.break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}

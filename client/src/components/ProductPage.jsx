@@ -173,7 +173,7 @@ const ProductPage = () => {
                 {/* Блок с информацией о продукте */}
                 <div className="space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 break-words max-w-full">
                             {product.name}
                         </h1>
                         {category && (
@@ -183,14 +183,14 @@ const ProductPage = () => {
                         )}
                     </div>
 
-                    <div className="text-3xl font-bold text-blue-600">
+                    <div className="text-2xl md:text-3xl font-bold text-blue-600">
                         {price} ₽
                     </div>
 
                     <div>
                         <h3 className="text-lg font-semibold mb-2">Описание</h3>
-                        <p className="text-gray-700 leading-relaxed">
-                            {product.description}
+                        <p className="text-gray-700 leading-relaxed break-words max-w-full">
+                            {product.description || 'Описание отсутствует'}
                         </p>
                     </div>
 
