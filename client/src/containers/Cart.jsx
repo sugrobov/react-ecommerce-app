@@ -11,6 +11,7 @@ const Cart = ({ onClose }) => {
     const [showCheckout, setShowCheckout] = useState(false);
 
     const handleQuantityChange = (id, newQuantity) => {
+        if (newQuantity < 1) return;
         dispatch(updateItemQuantity({ id, quantity: newQuantity }))
     }
 
@@ -23,11 +24,11 @@ const Cart = ({ onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-4 md:p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">Корзина</h2>
+                        <h2 className="text-xl md:text-2xl font-bold">Корзина</h2>
                         <Button
                             variant="outline"
                             size="small"
@@ -40,60 +41,86 @@ const Cart = ({ onClose }) => {
                     </div>
 
                     {items.length === 0 ? (
-                        <p className="text-center text-gray-500 py-8">Корзина пуста</p>
+                        <div className="text-center text-gray-500 py-8">
+                            <p className="text-lg mb-2">Корзина пуста</p>
+                            <p className="text-sm">Добавьте товары из каталога</p>
+                        </div>
                     ) : (
                         <>
                             <div className="space-y-4 mb-6">
                                 {items.map(item => (
-                                    <div key={item.id} className="flex items-center space-x-4 border-b pb-4">
+                                    <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b pb-4">
+                                        {/* Изображение товара */}
                                         {item.image && (
-                                            <img
-                                                src={item.image}
-                                                alt={item.name}
-                                                className="w-16 h-16 object-cover rounded"
-                                            />
+                                            <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20">
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    className="w-full h-full object-cover rounded"
+                                                />
+                                            </div>
                                         )}
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold">{item.name}</h3>
-                                            <p className="text-blue-600 font-bold">{item.price} ₽</p>
+
+                                        {/* Информация о товаре */}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-base md:text-lg line-clamp-2 break-words">
+                                                {item.name}
+                                            </h3>
+                                            <p className="text-blue-600 font-bold text-lg md:text-xl mt-1">
+                                                {item.price} ₽
+                                            </p>
                                         </div>
-                                        <div className="flex items-center space-x-2">
+
+                                        {/* Управление количеством */}
+                                        <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
+                                            <div className="flex items-center space-x-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="small"
+                                                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                                    className="!w-8 !h-8 !p-0 rounded-full flex-shrink-0"
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    -
+                                                </Button>
+                                                <span className="w-8 text-center font-medium text-lg">
+                                                    {item.quantity}
+                                                </span>
+                                                <Button
+                                                    variant="outline"
+                                                    size="small"
+                                                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                                    className="!w-8 !h-8 !p-0 rounded-full flex-shrink-0"
+                                                >
+                                                    +
+                                                </Button>
+                                            </div>
+
+                                            {/* Кнопка удаления */}
                                             <Button
-                                                variant="outline"
+                                                variant="danger"
                                                 size="small"
-                                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                className="!w-8 !h-8 !p-0 rounded-full"
+                                                onClick={() => handleRemove(item.id)}
+                                                className="flex-shrink-0"
                                             >
-                                                -
-                                            </Button>
-                                            <span className="w-8 text-center">{item.quantity}</span>
-                                            <Button
-                                                variant="outline"
-                                                size="small"
-                                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                                className="!w-8 !h-8 !p-0 rounded-full"
-                                            >
-                                                +
+                                                <span className="hidden sm:inline">Удалить</span>
+                                                <span className="sm:hidden">✕</span>
                                             </Button>
                                         </div>
-                                        <Button
-                                            variant="danger"
-                                            size="small"
-                                            onClick={() => handleRemove(item.id)}
-                                        >
-                                            Удалить
-                                        </Button>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="border-t pt-4">
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-xl font-bold">Итого:</span>
-                                    <span className="text-xl font-bold">{totalAmount} ₽</span>
+                            {/* Итого и кнопки */}
+                            <div className="border-t pt-4 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-lg md:text-xl font-bold">Итого:</span>
+                                    <span className="text-lg md:text-xl font-bold text-blue-600">
+                                        {totalAmount} ₽
+                                    </span>
                                 </div>
 
-                                <div className="flex space-x-4">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         variant="secondary"
                                         onClick={() => dispatch(clearCart())}
@@ -109,6 +136,11 @@ const Cart = ({ onClose }) => {
                                         Оформить заказ
                                     </Button>
                                 </div>
+                            </div>
+
+                            {/* Дополнительная информация */}
+                            <div className="mt-4 text-center text-sm text-gray-500">
+                                <p>В корзине {items.length} товар(ов)</p>
                             </div>
                         </>
                     )}
