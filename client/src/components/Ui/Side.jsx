@@ -1,8 +1,20 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import CategoryList from '../CategoryList';
 import Button from './Button';
 
 const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
+  
+  const location = useLocation();
+
+  const handleCategoryClick = (categoryId) => {
+    onSelectCategory(categoryId);
+    // Если мы на странице продукта, закрываем мобильное меню
+    if (location.pathname.startsWith('/product/')) {
+      onClose();
+    }
+  };
+
   return (
     <>
       {/* Overlay для мобильных */}
@@ -28,7 +40,7 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
                 variant="outline"
                 size="small"
                 onClick={onClose}
-                className="!p-2"
+                className="p-2!"
                 aria-label="Закрыть меню"
               >
                 ✕
@@ -37,7 +49,7 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
             
             <CategoryList 
               selectedCategory={selectedCategory}
-              onSelectCategory={onSelectCategory}
+              onSelectCategory={handleCategoryClick}  // Используем обертку
             />
             
             {/* Место для будущих фильтров */}

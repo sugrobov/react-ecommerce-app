@@ -5,16 +5,19 @@ import { setCategory } from '../store/uiSlice';
 
 import Header from '../components/Ui/Header';
 import Side from '../components/Ui/Side';
-import Content from '../components/Ui/Content';
+// import Content from '../components/Ui/Content';
 import Footer from '../components/Ui/Footer';
 import Cart from './Cart';
 import { routes } from '../routes/index';
 
 function App() {
   const dispatch = useDispatch();
+  
   const { selectedCategory, searchQuery } = useSelector(state => state.ui);
   const [showCart, setShowCart] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+
 
   const handleCategorySelect = useCallback((categoryId) => {
     dispatch(setCategory(categoryId));

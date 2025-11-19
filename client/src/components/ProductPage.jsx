@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { api } from "../services/api";
 import { addItemToCart } from "../store/cartSlice";
+import { setCategory } from "../store/uiSlice";
 import Button from "./Ui/Button";
 
 const ProductPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
 
@@ -36,6 +38,13 @@ const ProductPage = () => {
         queryFn: () => api.getCategories()
     });
 
+    // Функция установки категории при загрузке страницы
+    useEffect(() => {
+        if (product && product.category_id) {
+            dispatch(setCategory(product.category_id));
+        }
+    }, [product, dispatch]);
+
     const handleAddToCart = () => {
         if (product && variations?.[0]) {
             dispatch(addItemToCart({
@@ -49,6 +58,12 @@ const ProductPage = () => {
 
     const handleBackClick = () => {
         navigate(-1);
+    };
+
+    // Функция для перехода к товарам категории
+    const handleCategoryClick = (categoryId) => {
+        dispatch(setCategory(categoryId));
+        navigate('/');
     };
 
     if (productLoading || variationsLoading || imagesLoading) return
