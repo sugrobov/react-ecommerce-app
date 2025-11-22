@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import CategoryList from '../CategoryList';
+import CategoryDropdown from '../CategoryDropdown';
 import Button from './Button';
 
 const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
@@ -47,7 +47,7 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
               </Button>
             </div>
             
-            <CategoryList 
+            <CategoryDropdown
               selectedCategory={selectedCategory}
               onSelectCategory={handleCategoryClick}  // Используем обертку
             />
