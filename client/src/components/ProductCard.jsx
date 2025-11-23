@@ -24,9 +24,16 @@ const ProductCard = ({ product }) => {
         enabled: !!product.id
     });
 
+    const { data: categories } = useQuery({
+        queryKey: ['categories'],
+        queryFn: () => api.getCategories()
+    });
+
     const price = variations?.[0]?.price || 0;
     const productImages = images || [];
     const mainImage = productImages[0]?.image_url; // первое изображение
+
+    const category = categories?.find(cat => cat.id === product.category_id);
 
     const handleAddToCard = (e) => {
         e.stopPropagation();
@@ -73,6 +80,15 @@ const ProductCard = ({ product }) => {
                 <h3 className="font-semibold text-lg mb-2 line-clamp-2 min-h-[3.5rem]">
                     {truncateText(product.name, 60)}
                 </h3>
+
+                {/* Категория товара */}
+                {category && (
+                    <div className="mb-2">
+                        <span className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+                            {category.name}
+                        </span>
+                    </div>
+                )}
                 
                 {/* Описание - максимум 3 строки */}
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
