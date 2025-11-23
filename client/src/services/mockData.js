@@ -303,6 +303,14 @@ export const mockProductImages = [
     { id: 22, product_id: 22, image_url: generateProductImage("Floating") },
     { id: 23, product_id: 23, image_url: generateProductImage("Jumper") },
     { id: 24, product_id: 24, image_url: generateProductImage("Adrenaline") },
+    { id: 25, product_id: 25, image_url: generateProductImage("One") },
+    { id: 26, product_id: 26, image_url: generateProductImage("Two") },
+    { id: 27, product_id: 27, image_url: generateProductImage("Three") },
+    { id: 28, product_id: 28, image_url: generateProductImage("Four") },
+    { id: 29, product_id: 29, image_url: generateProductImage("Five") },
+    { id: 30, product_id: 30, image_url: generateProductImage("Two") },
+    { id: 31, product_id: 31, image_url: generateProductImage("Three") },
+
 ];
 
 export const mockProductVariations = [
@@ -330,4 +338,12 @@ export const mockProductVariations = [
     { id: 22, product_id: 22, price: 5990, stock: 40 },
     { id: 23, product_id: 23, price: 24990, stock: 12 },
     { id: 24, product_id: 24, price: 19990, stock: 10 },
+    { id: 25, product_id: 25, price: 19990, stock: 10 },
+    { id: 26, product_id: 26, price: 19990, stock: 10 },
+    { id: 27, product_id: 27, price: 19990, stock: 10 },
+    { id: 28, product_id: 28, price: 19990, stock: 10 },
+    { id: 29, product_id: 29, price: 19990, stock: 10 },
+    { id: 30, product_id: 30, price: 19990, stock: 10 },
+    { id: 31, product_id: 31, price: 19990, stock: 10 },
+    
 ];
