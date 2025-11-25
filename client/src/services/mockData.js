@@ -22,13 +22,23 @@ const generateProductImage = (text, width = 300, height = 300) => {
 
   const randomColor = colorPalette[Math.floor(Math.random() * colorPalette.length)];
 
-  return `data:image/svg+xml;base64,${btoa(`
+      const svgString = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="${randomColor}"/>
       <text x="50%" y="50%" font-family="Arial" font-size="16" fill="white" 
             text-anchor="middle" dy=".3em">${text}</text>
-    </svg>
-  `)}`;
+    </svg>`;
+
+// Используем TextEncoder для UTF-8 кодирования
+    const encoder = new TextEncoder();
+    const data = encoder.encode(svgString);
+    let binary = '';
+    for (let i = 0; i < data.length; i++) {
+        binary += String.fromCharCode(data[i]);
+    }
+    const base64 = btoa(binary);
+
+    return `data:image/svg+xml;base64,${base64}`;
 };
 
 const generateLongText = (type, wordCount = 10) => {
