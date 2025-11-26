@@ -58,37 +58,46 @@ export const api = {
         }
     },
 
-    async getProducts(range = [0, 24], filters = {}, searchQuery = '') {
-        if (USE_MOCK_DATA) {
-            let filteredProducts = mockProducts;
+    getProducts: (range, filters, searchQuery) => {
+        let filteredProducts = mockProducts;
 
-            // Применяем фильтры по категории
-            if (filters.category_id) {
-                filteredProducts = filterData(filteredProducts, filters);
-            }
-
-            // Применяем поиск
-            if (searchQuery) {
-                filteredProducts = searchProducts(filteredProducts, searchQuery);
-            }
-
-            // Применяем диапазон
-            return applyRange(filteredProducts, range);
+        // Фильтрация по категории
+        if (filters?.category_id) {
+            filteredProducts = filteredProducts.filter(product => product.category_id === filters.category_id);
         }
 
-        try {
-            const filterStr = encodeURIComponent(JSON.stringify(filters));
-            const rangeStr = encodeURIComponent(JSON.stringify(range));
-            const response = await fetch(
-                `${API_BASE}/Products?range=${rangeStr}&filter=${filterStr}`
+        // Фильтрация по поисковому запросу
+        if (searchQuery) {
+            filteredProducts = filteredProducts.filter(product =>
+                product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                product.description.toLowerCase().includes(searchQuery.toLowerCase())
             );
-            if (!response.ok) throw new Error('API error');
-            return await response.json();
-        } catch (error) {
-            console.warn('Using mock data due to API error:', error);
-            let filteredProducts = searchProducts(mockProducts, searchQuery);
-            return applyRange(filteredProducts, range);
         }
+
+        // Фильтрация по цене
+        if (filters?.priceFilter && filters.priceFilter.type !== 'any') {
+            filteredProducts = filteredProducts.filter(product => {
+                // Получаем цену товара из вариаций
+                const variation = mockProductVariations.find(v => v.product_id === product.id);
+                const price = variation ? variation.price : 0;
+
+                switch (filters.priceFilter.type) {
+                    case 'less':
+                        return price <= filters.priceFilter.max;
+                    case 'greater':
+                        return price >= filters.priceFilter.min;
+                    case 'range':
+                        return price >= filters.priceFilter.min && price <= filters.priceFilter.max;
+                    default:
+                        return true;
+                }
+            });
+        }
+
+        // Применяем диапазон (для пагинации)
+        const start = range[0];
+        const end = range[1];
+        return filteredProducts.slice(start, end + 1);
     },
 
     async getProductImages(productIds) {
