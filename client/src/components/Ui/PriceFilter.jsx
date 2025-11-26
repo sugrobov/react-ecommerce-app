@@ -159,13 +159,13 @@ const PriceFilter = () => {
             )}
 
             {/* Кнопки действий */}
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Button
                     onClick={handleApplyFilter}
                     disabled={isApplyDisabled}
                     variant="primary"
-                    size="medium"
-                    className="flex-1"
+                    size="small"
+                    className="w-full sm:w-auto sm:flex-1"
                 >
                     Применить
                 </Button>
@@ -173,8 +173,8 @@ const PriceFilter = () => {
                 <Button
                     onClick={handleClearFilter}
                     variant="outline"
-                    size="medium"
-                    className="flex-1"
+                    size="small"
+                    className="w-full sm:w-auto sm:flex-1"
                 >
                     Сбросить
                 </Button>
