@@ -1,10 +1,11 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import CategoryDropdown from '../CategoryDropdown';
+import PriceFilter from './PriceFilter';
 import Button from './Button';
 
 const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
-  
+
   const location = useLocation();
 
   const handleCategoryClick = (categoryId) => {
@@ -19,12 +20,12 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
     <>
       {/* Overlay для мобильных */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
-      
+
       {/* Боковая панель */}
       <div className={`
         fixed lg:static inset-y-0 left-0 z-50
@@ -36,7 +37,7 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
           <div className="p-4">
             <div className="flex justify-between items-center mb-4 lg:hidden">
               <h2 className="text-lg font-semibold">Меню</h2>
-              <Button 
+              <Button
                 variant="outline"
                 size="small"
                 onClick={onClose}
@@ -46,16 +47,15 @@ const Side = ({ selectedCategory, onSelectCategory, isOpen, onClose }) => {
                 ✕
               </Button>
             </div>
-            
+
             <CategoryDropdown
               selectedCategory={selectedCategory}
               onSelectCategory={handleCategoryClick}  // Используем обертку
             />
-            
-            {/* Место для будущих фильтров */}
+
+            {/* фильтры */}
             <div className="mt-6">
-              <h3 className="text-md font-semibold mb-3 text-gray-500">Фильтры</h3>
-              <p className="text-sm text-gray-400">Скоро здесь появятся фильтры...</p>
+              <PriceFilter />
             </div>
           </div>
         </div>
