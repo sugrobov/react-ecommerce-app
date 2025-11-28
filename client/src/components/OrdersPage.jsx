@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAllOrders, updateOrderStatus } from "../services/orderStorage";
 import Button from "./Ui/Button";
 
 
 const OrdersPage = () => {
+    const navigate = useNavigate();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("all"); // all, pending, completed
@@ -105,8 +107,61 @@ const OrdersPage = () => {
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+            {/* Хлебные крошки */}
+            <nav className="mb-6 text-sm text-gray-600">
+                <ol className="flex items-center space-x-2">
+                    <li>
+                        <button
+                            onClick={() => navigate('/')}
+                            className="hover:text-blue-600 hover:underline transition-colors"
+                        >
+                            Главная
+                        </button>
+                    </li>
+                    <li className="flex items-center">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </li>
+                    <li className="font-medium text-gray-800">Заказы</li>
+                </ol>
+            </nav>
+
+            {/* Кнопки навигации */}
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+                <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 hover:shadow-sm transition-shadow"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Назад
+                </Button>
+
+                <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-2 hover:shadow-sm transition-shadow"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    На главную
+                </Button>
+            </div>
+
+            {/* Заголовок */}
             <div className="mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">📦 Заказы</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    Заказы
+                </h1>
                 <p className="text-gray-600 mt-1">Управление заказами клиентов</p>
             </div>
 
