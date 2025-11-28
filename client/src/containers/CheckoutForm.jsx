@@ -211,11 +211,7 @@ const CheckoutForm = ({ onClose }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div
-                className="transform transition-all duration-300 ease-out opacity-0 translate-y-4 scale-95 animate-appear"
-                style={{
-                    animation: "fadeInUp 0.3s ease-out forwards",
-                }}
-            >
+                className="transform transition-all duration-300 ease-out opacity-0 translate-y-4 scale-95 animate-appear">
                 <div className="bg-white rounded-lg max-w-md w-full">
                     <form onSubmit={handleSubmit} className="p-6">
                         <h2 className="text-2xl font-bold mb-6">Оформление заказа</h2>
