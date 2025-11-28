@@ -124,3 +124,4 @@ const Input = forwardRef(({
 );
 
 Input.displayName = "Input"; // добавляем имя для отладки
+export default Input;
