@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import SearchBar from '../SearchBar';
 import { setSearchQuery } from '../../store/uiSlice';
 import Button from './Button';
@@ -10,7 +11,7 @@ const Header = ({ onCartClick, onMenuToggle }) => {
 
     // Обработчик поиска - используем useCallback для оптимизации 
     const { items } = useSelector(state => state.cart); // Получаем товары из корзины
-       // Вычисляем общее количество товаров в корзине
+    // Вычисляем общее количество товаров в корзине
     const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
     const handleSearch = useCallback((query) => {
@@ -40,10 +41,22 @@ const Header = ({ onCartClick, onMenuToggle }) => {
                         <div className="hidden sm:block">
                             <SearchBar onSearch={handleSearch} />
                         </div>
+                        {/* Кнопка заказов */}
+                        <Link to="/orders">
+                            <Button
+                                variant="outline"
+                                size="small"
+                                className="text-sm px-3"
+                            >
+                                Заказы
+                            </Button>
+                        </Link>
+
+                        {/* Кнопка корзины */}
                         <Button
                             variant="primary"
                             onClick={onCartClick}
-                            badge={totalItems} // количество товаров в корзине
+                            badge={totalItems}
                             className="relative"
                         >
                             Корзина
