@@ -1,6 +1,6 @@
-import React from "react";
+import React, { forwardRef } from "react";
 
-const Input = ({
+const Input = forwardRef(({
     type = 'text',
     value,
     onChange,
@@ -12,12 +12,25 @@ const Input = ({
     icon,
     checked,    //** для чекбокса */
     name,      //** для чекбокса */
-    ...props
-}) => {
+    label,      //** для лейбла: текст метки */
+    labelClassName, //** для лейбла: стили лейбла */
+    error,
+    success,
+    autoFocus = false,
+    ...props }, ref
+) => {
 
     const baseClasses = type === 'radio' || type === 'checkbox'
         ? 'focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors'
         : 'w-full border rounded-lg focus:outline-none transition-colors';
+
+    const getVariant = () => {
+        if (error) return "error";
+        if (success) return "success";
+        return variant;
+    };
+
+    const currentVariant = getVariant();
 
     const variantClasses = {
         default: type === 'radio' || type === 'checkbox'
@@ -35,48 +48,79 @@ const Input = ({
 
     const disabledClasses = disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white';
 
-    const combinedClasses = `
-    ${baseClasses}
-    ${variantClasses[variant]}
-    ${sizeClasses[size]}
-    ${disabledClasses}
-    ${className}
-  `.trim();
+    const combinedClasses = [
+        baseClasses,
+        variantClasses[currentVariant],
+        sizeClasses[size],
+        disabledClasses,
+        className,
+    ].filter(Boolean).join(' ').replace(/\s+/g, ' ');
+    // Генерация уникального id, если не передан
+    const inputId = props.id || `input-${name || Math.random().toString(36).substr(2, 9)}`;
 
-    if (type === 'radio' || type === 'checkbox') {
+    if (type === "radio" || type === "checkbox") {
         return (
-            <input
-                type={type}
-                value={value}
-                onChange={onChange}
-                checked={checked}
-                name={name}
-                disabled={disabled}
-                className={combinedClasses}
-                {...props}
-            />
+            <div className="flex items-center space-x-2">
+                <input
+                    type={type}
+                    id={inputId}
+                    name={name}
+                    checked={checked}
+                    value={value}
+                    onChange={onChange}
+                    disabled={disabled}
+                    className={combinedClasses}
+                    ref={ref}
+                    autoFocus={autoFocus}
+                    {...props}
+                />
+                {label && (
+                    <label
+                        htmlFor={inputId}
+                        className={`text-sm font-medium ${disabled ? 'text-gray-400' : 'text-gray-700'} ${labelClassName || ''}`}
+                    >
+                        {label}
+                    </label>
+                )}
+            </div>
         );
     }
 
     return (
-        <div className="relative">
-            <input
-                type={type}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                disabled={disabled}
-                className={combinedClasses}
-                {...props}
-            />
-            {icon && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    {icon}
-                </div>
+        <div className="space-y-1">
+            {label && (
+                <label
+                    htmlFor={inputId}
+                    className={`text-sm font-medium ${disabled ? 'text-gray-400' : 'text-gray-700'} ${labelClassName || ''}`}
+                >
+                    {label}
+                </label>
             )}
+            <div className="relative">
+                <input
+                    type={type}
+                    id={inputId}
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    placeholder={placeholder}
+                    disabled={disabled}
+                    className={combinedClasses}
+                    ref={ref}
+                    autoFocus={autoFocus}
+                    {...props}
+                />
+                {icon && (
+                    <div className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2 transform text-gray-500">
+                        {icon}
+                    </div>
+                )}
+            </div>
+            {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+            {success && !error && <p className="text-green-500 text-xs mt-1">{success}</p>}
         </div>
     );
-
 }
+);
 
-export default Input;
+Input.displayName = "Input"; // добавляем имя для отладки
