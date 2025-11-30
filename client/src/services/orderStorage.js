@@ -11,32 +11,55 @@ const orderStorage = localForage.createInstance({
 });
 
 /**
- * Сохраняет новый заказ в локальное хранилище
+ * Сохраняет новый заказ в локальное хранилище и (опционально) на сервер
  * @param {Object} order - Объект заказа для сохранения
- * @param {string} order.name - Имя клиента
- * @param {string} order.phone - Телефон клиента
- * @param {string} order.address - Адрес доставки
- * @param {string} order.deliveryTime - Время доставки
- * @param {Array} order.items - Массив товаров в заказе
- * @param {number} order.total - Общая сумма заказа
- * @param {string} order.status - Статус заказа ('pending', 'completed', etc.)
  * @returns {Promise<Object>} Сохраненный заказ с добавленными id и timestamp
- * @throws {Error} Если произошла ошибка при сохранении
  */
+
 export const saveOrder = async (order) => {
-    try {
-        const orders = await getAllOrders();
+
         const newOrder = {
-            id: nanoid(), // Генерирует уникальный ID
-            timestamp: new Date().toISOString(), // Время создания заказа
-            ...order
-        };
+        id: nanoid(),
+        timestamp: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        ...order
+    };
+
+    try {
+        // 1. Сначала сохраняем локально 
+        const orders = await getAllOrders();
         orders.push(newOrder);
         await orderStorage.setItem('orders', orders);
+
+        // 2. Пытаемся отправить на сервер (если есть API)
+        await sendOrderToServer(newOrder).catch((err) => {
+            console.warn('Заказ сохранён локально, но не отправлен на сервер (оффлайн || отсутствует токен)', err);
+            // дописать
+        });
+
         return newOrder;
     } catch (err) {
-        console.error('Ошибка сохранения заказа:', err);
+        console.error('Ошибка при сохранении заказа:', err);
         throw err;
+    }
+};
+
+// 2. Функция для отправки заказа на сервер
+const sendOrderToServer = async (order) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return; // Нет токена
+
+    const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(order)
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
 };
 
