@@ -3,7 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { clearCart } from "../store/cartSlice";
 import Button from "../components/Ui/Button";
 import Input from "../components/Ui/Input";
-import { saveOrder } from "../services/orderStorage";
+import { saveOrder, syncPendingOrders } from "../services/orderStorage";
+import { authService } from "../services/auth";
+import AuthModal from "../components/AuthModal"; 
 
 const CheckoutForm = ({ onClose }) => {
     const dispatch = useDispatch();
@@ -30,6 +32,19 @@ const CheckoutForm = ({ onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
+
+    // Аутентификация
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Проверяем статус аутентификации при загрузке
+    useEffect(() => {
+        const checkAuth = async () => {
+            await authService.init();
+            setIsAuthenticated(authService.isAuthenticated());
+        };
+        checkAuth();
+    }, []);
 
     // Генерация CAPTCHA
     useEffect(() => {
@@ -73,6 +88,17 @@ const CheckoutForm = ({ onClose }) => {
             nameRef.current.focus();
         }
     }, []);
+
+    // Обработчик успешной аутентификации
+    const handleAuthSuccess = async () => {
+        setIsAuthenticated(true);
+        // Синхронизируем неотправленные заказы после авторизации
+        try {
+            await syncPendingOrders();
+        } catch (error) {
+            console.warn('Ошибка синхронизации заказов:', error);
+        }
+    };
 
     // Форматирование телефона
     const formatPhone = (value) => {
@@ -201,6 +227,11 @@ const CheckoutForm = ({ onClose }) => {
                     <div className="text-green-500 text-6xl mb-4">✅</div>
                     <h2 className="text-2xl font-bold mb-2">Заказ оформлен!</h2>
                     <p className="text-gray-600 mb-4">Спасибо за покупку.</p>
+                    {!isAuthenticated && (
+                        <p className="text-sm text-yellow-600 mb-2">
+                            Заказ сохранен локально. Авторизуйтесь для синхронизации.
+                        </p>
+                    )}
                     <p className="text-sm text-gray-500">Окно закроется через 3 секунды...</p>
                 </div>
             </div>
@@ -209,127 +240,164 @@ const CheckoutForm = ({ onClose }) => {
 
     // Основная форма — с анимацией появления
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div
-                className="transform transition-all duration-300 ease-out opacity-0 translate-y-4 scale-95 animate-appear">
-                <div className="bg-white rounded-lg max-w-md w-full">
-                    <form onSubmit={handleSubmit} className="p-6">
-                        <h2 className="text-2xl font-bold mb-6">Оформление заказа</h2>
+        <>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div
+                    className="transform transition-all duration-300 ease-out opacity-0 translate-y-4 scale-95 animate-appear">
+                    <div className="bg-white rounded-lg max-w-md w-full">
+                        <form onSubmit={handleSubmit} className="p-6">
+                            <h2 className="text-2xl font-bold mb-6">Оформление заказа</h2>
 
-                        {errors.submit && (
-                            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
-                                {errors.submit}
-                            </div>
-                        )}
+                            {errors.submit && (
+                                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-sm">
+                                    {errors.submit}
+                                </div>
+                            )}
 
-                        <div className="space-y-6">
-                            <Input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                label="Имя *"
-                                placeholder="Введите ваше имя"
-                                error={errors.name}
-                                ref={nameRef}
-                                autoFocus
-                            />
-
-                            <Input
-                                type="text"
-                                name="address"
-                                value={formData.address}
-                                onChange={handleChange}
-                                label="Адрес *"
-                                placeholder="Улица, дом, квартира"
-                                error={errors.address}
-                            />
-
-                            <Input
-                                type="tel"
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                label="Телефон *"
-                                placeholder="+7 (999) 999-99-99"
-                                error={errors.phone}
-                            />
-
-                            <Input
-                                type="time"
-                                name="time"
-                                value={formData.time}
-                                onChange={handleChange}
-                                label="Время доставки *"
-                                error={errors.time}
-                            />
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Введите текст с картинки *
-                                </label>
-                                <div className="flex items-center space-x-3 mb-2">
-                                    <div
-                                        className="flex-1 bg-gray-100 text-2xl font-bold text-center py-2 px-4 rounded select-none"
-                                        style={{ fontFamily: "monospace", letterSpacing: "2px" }}
-                                    >
-                                        {captchaText}
-                                    </div>
+                            {/* Блок аутентификации */}
+                            {!isAuthenticated && (
+                                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p className="text-sm text-blue-800 mb-2">
+                                        🔒 Авторизуйтесь, чтобы синхронизировать заказы между устройствами
+                                    </p>
                                     <Button
                                         type="button"
-                                        variant="captcha"
-                                        size="captcha"
-                                        onClick={generateCaptcha}
+                                        variant="outline"
+                                        onClick={() => setShowAuthModal(true)}
+                                        className="w-full"
                                         disabled={isSubmitting}
-                                    />
+                                    >
+                                        Войти или Зарегистрироваться
+                                    </Button>
                                 </div>
+                            )}
+
+                            {isAuthenticated && (
+                                <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                                    <p className="text-sm text-green-800 flex items-center">
+                                        <span className="mr-2">✅</span>
+                                        Вы авторизованы. Заказы будут синхронизированы с сервером.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="space-y-6">
                                 <Input
                                     type="text"
-                                    value={userCaptcha}
-                                    onChange={handleCaptchaChange}
-                                    placeholder="Введите 6 символов"
-                                    maxLength={6}
-                                    error={showCaptchaError ? "Неверный текст" : errors.captcha}
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    label="Имя *"
+                                    placeholder="Введите ваше имя"
+                                    error={errors.name}
+                                    ref={nameRef}
+                                    autoFocus
                                 />
-                            </div>
-                        </div>
 
-                        <div className="mt-6 border-t pt-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-lg font-bold">Итого:</span>
-                                <span className="text-lg font-bold">{totalAmount} ₽</span>
+                                <Input
+                                    type="text"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    label="Адрес *"
+                                    placeholder="Улица, дом, квартира"
+                                    error={errors.address}
+                                />
+
+                                <Input
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    label="Телефон *"
+                                    placeholder="+7 (999) 999-99-99"
+                                    error={errors.phone}
+                                />
+
+                                <Input
+                                    type="time"
+                                    name="time"
+                                    value={formData.time}
+                                    onChange={handleChange}
+                                    label="Время доставки *"
+                                    error={errors.time}
+                                />
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Введите текст с картинки *
+                                    </label>
+                                    <div className="flex items-center space-x-3 mb-2">
+                                        <div
+                                            className="flex-1 bg-gray-100 text-2xl font-bold text-center py-2 px-4 rounded select-none"
+                                            style={{ fontFamily: "monospace", letterSpacing: "2px" }}
+                                        >
+                                            {captchaText}
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="captcha"
+                                            size="captcha"
+                                            onClick={generateCaptcha}
+                                            disabled={isSubmitting}
+                                        />
+                                    </div>
+                                    <Input
+                                        type="text"
+                                        value={userCaptcha}
+                                        onChange={handleCaptchaChange}
+                                        placeholder="Введите 6 символов"
+                                        maxLength={6}
+                                        error={showCaptchaError ? "Неверный текст" : errors.captcha}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="flex space-x-4">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={onClose}
-                                    className="flex-1"
-                                    disabled={isSubmitting}
-                                >
-                                    Назад
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    className="flex-1"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting ? "Оформление..." : "Сделать заказ"}
-                                </Button>
-                            </div>
+                            <div className="mt-6 border-t pt-4">
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-lg font-bold">Итого:</span>
+                                    <span className="text-lg font-bold">{totalAmount} ₽</span>
+                                </div>
 
-                            {isBlocked && (
-                                <p className="text-sm text-gray-500 text-center mt-2">
-                                    Подождите 2 минуты перед следующим заказом
-                                </p>
-                            )}
-                        </div>
-                    </form>
+                                <div className="flex space-x-4">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={onClose}
+                                        className="flex-1"
+                                        disabled={isSubmitting}
+                                    >
+                                        Назад
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        className="flex-1"
+                                        disabled={isSubmitting}
+                                    >
+                                        {isSubmitting ? "Оформление..." : "Сделать заказ"}
+                                    </Button>
+                                </div>
+
+                                {isBlocked && (
+                                    <p className="text-sm text-gray-500 text-center mt-2">
+                                        Подождите 2 минуты перед следующим заказом
+                                    </p>
+                                )}
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Модальное окно аутентификации */}
+            {showAuthModal && (
+                <AuthModal
+                    onClose={() => setShowAuthModal(false)}
+                    onSuccess={handleAuthSuccess}
+                />
+            )}
+        </>
     );
 };
 
