@@ -1,66 +1,117 @@
 import localForage from 'localforage';
 import { nanoid } from '@reduxjs/toolkit';
+import { authService } from './auth';
 
-/**
- * LocalForage instance для хранения заказов
- * Использует IndexedDB или WebSQL в зависимости от поддержки браузером
- */
 const orderStorage = localForage.createInstance({
-    name: 'AquaLand',
-    storeName: 'orders'
+  name: 'AquaLand',
+  storeName: 'orders'
 });
 
-/**
- * Сохраняет новый заказ в локальное хранилище и (опционально) на сервер
- * @param {Object} order - Объект заказа для сохранения
- * @returns {Promise<Object>} Сохраненный заказ с добавленными id и timestamp
- */
+// Отправка заказа на сервер
+const sendOrderToServer = async (order) => {
+  if (!authService.isAuthenticated()) {
+    throw new Error('Not authenticated');
+  }
 
-export const saveOrder = async (order) => {
+  const response = await fetch('/api/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authService.getAuthHeader()
+    },
+    body: JSON.stringify(order)
+  });
 
-        const newOrder = {
-        id: nanoid(),
-        timestamp: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        ...order
-    };
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 
-    try {
-        // 1. Сначала сохраняем локально 
-        const orders = await getAllOrders();
-        orders.push(newOrder);
-        await orderStorage.setItem('orders', orders);
-
-        // 2. Пытаемся отправить на сервер (если есть API)
-        await sendOrderToServer(newOrder).catch((err) => {
-            console.warn('Заказ сохранён локально, но не отправлен на сервер (оффлайн || отсутствует токен)', err);
-            // дописать
-        });
-
-        return newOrder;
-    } catch (err) {
-        console.error('Ошибка при сохранении заказа:', err);
-        throw err;
-    }
+  return response.json();
 };
 
-// 2. Функция для отправки заказа на сервер
-const sendOrderToServer = async (order) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) return; // Нет токена
+// Синхронизация неотправленных заказов
+export const syncPendingOrders = async () => {
+  if (!authService.isAuthenticated()) return [];
 
-    const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(order)
+  try {
+    const orders = await getAllOrders();
+    const pendingOrders = orders.filter(order => !order.synced);
+    
+    if (pendingOrders.length === 0) return [];
+
+    const response = await fetch('/api/orders/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authService.getAuthHeader()
+      },
+      body: JSON.stringify({ orders: pendingOrders })
     });
 
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const { syncedOrders } = await response.json();
+    
+    // Обновляем локальные заказы
+    const allOrders = await getAllOrders();
+    const updatedOrders = allOrders.map(order => {
+      const syncedOrder = syncedOrders.find(so => so.id === order.id);
+      return syncedOrder ? { ...order, ...syncedOrder } : order;
+    });
+    
+    await orderStorage.setItem('orders', updatedOrders);
+    
+    return syncedOrders;
+  } catch (error) {
+    console.warn('Failed to sync orders:', error);
+    throw error;
+  }
+};
+
+export const saveOrder = async (order) => {
+  const newOrder = {
+    id: nanoid(),
+    timestamp: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    synced: false,
+    ...order
+  };
+
+  try {
+    // 1. Сохраняем локально
+    const orders = await getAllOrders();
+    orders.push(newOrder);
+    await orderStorage.setItem('orders', orders);
+
+    // 2. Пытаемся отправить на сервер если авторизованы
+    if (authService.isAuthenticated()) {
+      try {
+        const serverOrder = await sendOrderToServer(newOrder);
+        await updateOrderInStorage(newOrder.id, { ...newOrder, synced: true, syncedAt: new Date().toISOString() });
+        return serverOrder;
+      } catch (serverError) {
+        console.warn('Order saved locally but not synced:', serverError);
+      }
+    }
+
+    return newOrder;
+  } catch (err) {
+    console.error('Ошибка при сохранении заказа:', err);
+    throw err;
+  }
+};
+
+// Вспомогательная функция для обновления заказа
+const updateOrderInStorage = async (orderId, updates) => {
+  const orders = await getAllOrders();
+  const orderIndex = orders.findIndex(order => order.id === orderId);
+  
+  if (orderIndex !== -1) {
+    orders[orderIndex] = { ...orders[orderIndex], ...updates };
+    await orderStorage.setItem('orders', orders);
+  }
 };
 
 /**
