@@ -5,7 +5,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 
-
 dotenv.config();
 
 // Проверка секретных ключей
@@ -27,7 +26,7 @@ const passwordResetTokens = new Map();
 const ordersDB = new Map(); // Хранилище заказов
 
 app.use(cors({
-  origin: 'http://localhost:3000', // URL фронтенда
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
 app.use(express.json());
@@ -172,24 +171,22 @@ app.post('/api/auth/forgot-password', async (req, res) => {
   const user = users.get(email);
 
   if (!user) {
-    // Для безопасности не сообщаем, что пользователь не существует
     return res.json({ message: 'Если пользователь существует, инструкции отправлены на email' });
   }
 
   const resetToken = uuidv4();
-  const expiresAt = new Date(Date.now() + 3600000); // 1 час
+  const expiresAt = new Date(Date.now() + 3600000);
 
   passwordResetTokens.set(resetToken, {
     userId: user.id,
     expiresAt
   });
 
-  // В реальном приложении отправить email
   console.log(`Reset token for ${email}: ${resetToken}`);
 
   res.json({
     message: 'Инструкции по сбросу пароля отправлены на email',
-    resetToken // Только для разработки
+    resetToken
   });
 });
 
@@ -220,26 +217,48 @@ app.get('/api/orders', authenticateToken, (req, res) => {
   res.json({ orders: userOrders });
 });
 
-// Создание заказа
+// Создание заказа с проверкой уникальности ID
 app.post('/api/orders', authenticateToken, (req, res) => {
   try {
+    const { id: clientOrderId, localId, ...orderData } = req.body;
+    const userOrders = ordersDB.get(req.user.userId) || [];
+
+    // Проверка обязательных полей
+    const requiredFields = ['products', 'totalAmount'];
+    for (const field of requiredFields) {
+      if (!orderData[field]) {
+        return res.status(400).json({
+          error: `Отсутствует обязательное поле: ${field}`
+        });
+      }
+    }
+
+    if (clientOrderId) {
+      const existingOrder = userOrders.find(o => o.id === clientOrderId);
+      if (existingOrder) {
+        return res.status(409).json({
+          error: 'Заказ с таким ID уже существует',
+          existingOrder
+        });
+      }
+    }
+
     const order = {
-      id: uuidv4(),
+      id: clientOrderId || uuidv4(),
+      localId: localId || null,
       userId: req.user.userId,
-      ...req.body,
+      ...orderData,
       synced: true,
       syncedAt: new Date().toISOString(),
-      serverCreatedAt: new Date().toISOString()
+      serverCreatedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
-    // Сохраняем заказ в общей базе
-    if (!ordersDB.has(req.user.userId)) {
-      ordersDB.set(req.user.userId, []);
-    }
-    ordersDB.get(req.user.userId).push(order);
+    userOrders.push(order);
+    ordersDB.set(req.user.userId, userOrders);
 
     console.log('Order saved to server for user:', req.user.userId, order);
-
     res.json(order);
   } catch (error) {
     console.error('Order creation error:', error);
@@ -247,37 +266,211 @@ app.post('/api/orders', authenticateToken, (req, res) => {
   }
 });
 
-// Синхронизация локальных заказов
-app.post('/api/orders/sync', authenticateToken, async (req, res) => {
+// Эндпоинт для очистки дубликатов заказов
+app.post('/api/orders/cleanup', authenticateToken, (req, res) => {
+  try {
+    const userOrders = ordersDB.get(req.user.userId) || [];
+
+    const uniqueOrders = [];
+    const seenIds = new Set();
+
+    for (const order of userOrders) {
+      if (!seenIds.has(order.id)) {
+        seenIds.add(order.id);
+        uniqueOrders.push(order);
+      }
+    }
+
+    ordersDB.set(req.user.userId, uniqueOrders);
+
+    res.json({
+      success: true,
+      removedDuplicates: userOrders.length - uniqueOrders.length,
+      totalOrders: uniqueOrders.length
+    });
+  } catch (error) {
+    console.error('Cleanup error:', error);
+    res.status(500).json({ error: 'Ошибка очистки заказов' });
+  }
+});
+
+// Получение конкретного заказа
+app.get('/api/orders/:orderId', authenticateToken, (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userOrders = ordersDB.get(req.user.userId) || [];
+    const order = userOrders.find(o => o.id === orderId);
+
+    if (!order) {
+      return res.status(404).json({ error: 'Заказ не найден' });
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.error('Error getting order:', error);
+    res.status(500).json({ error: 'Ошибка получения заказа' });
+  }
+});
+
+// Обновление статуса заказа
+app.patch('/api/orders/:orderId/status', authenticateToken, (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        error: 'Неверный статус заказа',
+        validStatuses
+      });
+    }
+
+    const userOrders = ordersDB.get(req.user.userId) || [];
+    const orderIndex = userOrders.findIndex(order => order.id === orderId);
+
+    if (orderIndex === -1) {
+      return res.status(404).json({ error: 'Заказ не найден' });
+    }
+
+    userOrders[orderIndex] = {
+      ...userOrders[orderIndex],
+      status,
+      updatedAt: new Date().toISOString(),
+      synced: true,
+      syncedAt: new Date().toISOString()
+    };
+
+    ordersDB.set(req.user.userId, userOrders);
+
+    console.log(`Order ${orderId} status updated to ${status} for user ${req.user.userId}`);
+    res.json(userOrders[orderIndex]);
+
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ error: 'Ошибка обновления статуса заказа' });
+  }
+});
+
+// Массовая синхронизация заказов с обработкой конфликтов (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+app.post('/api/orders/sync', authenticateToken, (req, res) => {
   try {
     const { orders } = req.body;
-    const syncedOrders = [];
 
-    // Инициализируем хранилище для пользователя если нужно
+    if (!Array.isArray(orders)) {
+      return res.status(400).json({ error: 'Ожидается массив заказов' });
+    }
+
     if (!ordersDB.has(req.user.userId)) {
       ordersDB.set(req.user.userId, []);
     }
 
-    for (const localOrder of orders) {
-      const syncedOrder = {
-        ...localOrder,
-        id: localOrder.id || uuidv4(),
-        userId: req.user.userId,
-        synced: true,
-        syncedAt: new Date().toISOString(),
-        serverSyncedAt: new Date().toISOString()
-      };
+    const userOrders = ordersDB.get(req.user.userId);
+    const syncedOrders = [];
 
-      // Добавляем заказ в хранилище
-      ordersDB.get(req.user.userId).push(syncedOrder);
-      syncedOrders.push(syncedOrder);
+    const conflicts = [];
+    const now = new Date().toISOString();
+
+    for (const localOrder of orders) {
+      const { id: clientId, localId: clientLocalId, ...orderData } = localOrder;
+
+      // 1. Ищем существующий заказ
+      let existingIndex = -1;
+      let existingOrder = null;
+
+      // Сначала ищем по clientId (если он есть)
+      if (clientId) {
+        existingIndex = userOrders.findIndex(o => o.id === clientId);
+      }
+
+      // Если не нашли по clientId, ищем по clientLocalId
+      if (existingIndex === -1 && clientLocalId) {
+        existingIndex = userOrders.findIndex(o => o.localId === clientLocalId);
+      }
+
+      // Если заказ найден
+      if (existingIndex !== -1) {
+        existingOrder = userOrders[existingIndex];
+
+        // Проверяем конфликт
+        const hasConflict = existingOrder.updatedAt &&
+          localOrder.updatedAt &&
+          existingOrder.updatedAt !== localOrder.updatedAt &&
+          new Date(existingOrder.updatedAt) > new Date(localOrder.updatedAt);
+
+        if (hasConflict) {
+          // Регистрируем конфликт
+          conflicts.push({
+            serverOrder: existingOrder,
+            clientOrder: localOrder,
+            resolved: false,
+            conflictAt: now
+          });
+
+          // Обновляем только syncedAt у существующего заказа
+          userOrders[existingIndex] = {
+            ...existingOrder,
+            synced: true,
+            syncedAt: now
+          };
+
+          syncedOrders.push(userOrders[existingIndex]);
+          continue;
+        }
+
+        // Обновляем существующий заказ (нет конфликта или клиентская версия новее)
+        const updatedOrder = {
+          ...existingOrder,
+          ...orderData,
+          localId: clientLocalId !== undefined ? clientLocalId : existingOrder.localId,
+          synced: true,
+          syncedAt: now,
+          updatedAt: now
+        };
+
+        userOrders[existingIndex] = updatedOrder;
+        syncedOrders.push(updatedOrder);
+
+      } else {
+        // Создаем новый заказ
+        const newId = clientId || uuidv4();
+        const newOrder = {
+          id: newId,
+          localId: clientLocalId || null,
+          userId: req.user.userId,
+          ...orderData,
+          synced: true,
+          syncedAt: now,
+          serverCreatedAt: now,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        userOrders.push(newOrder);
+        syncedOrders.push(newOrder);
+      }
     }
 
-    console.log(`Synced ${syncedOrders.length} orders for user:`, req.user.userId);
-    res.json({ syncedOrders });
+    // Сохраняем обратно
+    ordersDB.set(req.user.userId, userOrders);
+
+    console.log(`Synced ${syncedOrders.length} orders for user ${req.user.userId}, conflicts: ${conflicts.length}`);
+
+    res.json({
+      success: true,
+      syncedOrders,
+      conflicts: conflicts.length > 0 ? conflicts : undefined,
+      stats: {
+        totalSynced: syncedOrders.length,
+        conflicts: conflicts.length,
+        serverTotal: userOrders.length
+      },
+      message: `Синхронизировано ${syncedOrders.length} заказов${conflicts.length > 0 ? ` (${conflicts.length} конфликтов)` : ''}`
+    });
+
   } catch (error) {
     console.error('Sync error:', error);
-    res.status(500).json({ error: 'Ошибка синхронизации' });
+    res.status(500).json({ error: 'Ошибка синхронизации заказов' });
   }
 });
 
@@ -308,7 +501,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Endpoint для просмотра всех пользователей (только для разработки)
+// Endpoint для просмотра всех пользователей
 app.get('/api/debug/users', (req, res) => {
   const usersArray = Array.from(users.values()).map(user => ({
     id: user.id,
@@ -320,7 +513,7 @@ app.get('/api/debug/users', (req, res) => {
   res.json({ users: usersArray });
 });
 
-// Endpoint для просмотра всех заказов (только для разработки)
+// Endpoint для просмотра всех заказов
 app.get('/api/debug/orders', (req, res) => {
   const allOrders = [];
   for (const [userId, orders] of ordersDB.entries()) {
@@ -340,8 +533,36 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Создание тестового пользователя при запуске сервера
+const createTestUser = async () => {
+  const testEmail = 'test@test.com';
+
+  if (!users.has(testEmail)) {
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    const testUser = {
+      id: uuidv4(),
+      email: testEmail,
+      password: hashedPassword,
+      name: 'Тестовый пользователь',
+      phone: '+79991234567',
+      createdAt: new Date().toISOString()
+    };
+
+    users.set(testEmail, testUser);
+    console.log('✅ Тестовый пользователь создан:', testEmail);
+    console.log('🔑 Пароль: password123');
+  }
+};
+
+// Вызов функции создания тестового пользователя
+createTestUser();
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   console.log(`Test endpoint: http://localhost:${PORT}/api/test`);
+  console.log('Эндпоинты:');
+  console.log(`  - POST /api/auth/login`);
+  console.log(`  - POST /api/orders/sync (массовая синхронизация)`);
+  console.log(`  - POST /api/orders/cleanup (очистка дубликатов)`);
 });
