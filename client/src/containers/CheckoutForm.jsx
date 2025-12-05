@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart } from "../store/cartSlice";
+import Button from "../components/Ui/Button";
+import Input from "../components/Ui/Input";
 import { saveOrder, syncPendingOrders } from "../services/orderStorage";
 import { authService } from "../services/auth";
 import AuthModal from "../components/AuthModal"; 
-import OrderConfirmation from "../components/OrderConfirmation";
-import Button from "../components/Ui/Button";
-import Input from "../components/Ui/Input";
 
 const CheckoutForm = ({ onClose }) => {
     const dispatch = useDispatch();
@@ -31,12 +30,11 @@ const CheckoutForm = ({ onClose }) => {
     const [showCaptchaError, setShowCaptchaError] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [success, setSuccess] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
 
-    // Состояния для управления отображением
+    // Аутентификация
     const [showAuthModal, setShowAuthModal] = useState(false);
-    const [showOrderConfirmation, setShowOrderConfirmation] = useState(false);
-    const [savedOrderData, setSavedOrderData] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     // Проверяем статус аутентификации при загрузке
@@ -51,7 +49,7 @@ const CheckoutForm = ({ onClose }) => {
     // Генерация CAPTCHA
     useEffect(() => {
         generateCaptcha();
-    }, [showOrderConfirmation]);
+    }, [success]);
 
     const generateCaptcha = () => {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -74,21 +72,22 @@ const CheckoutForm = ({ onClose }) => {
 
     // Блокировка
     useEffect(() => {
-        if (showOrderConfirmation) {
+        if (success) {
             setIsBlocked(true);
             const timer = setTimeout(() => {
                 setIsBlocked(false);
+                setSuccess(false);
             }, 120000);
             return () => clearTimeout(timer);
         }
-    }, [showOrderConfirmation]);
+    }, [success]);
 
     // Автофокус
     useEffect(() => {
-        if (nameRef.current && !showOrderConfirmation) {
+        if (nameRef.current) {
             nameRef.current.focus();
         }
-    }, [showOrderConfirmation]);
+    }, []);
 
     // Обработчик успешной аутентификации
     const handleAuthSuccess = async () => {
@@ -203,48 +202,48 @@ const CheckoutForm = ({ onClose }) => {
                 createdAt: new Date().toISOString(),
             };
 
-            // Сохраняем заказ
-            const savedOrder = await saveOrder(orderData);
-            
-            // Сохраняем данные заказа для компонента подтверждения
-            setSavedOrderData(savedOrder);
-            
-            // Показываем компонент подтверждения заказа
-            setShowOrderConfirmation(true);
-            
-            // Очищаем корзину
+            await saveOrder(orderData);
+
+            console.log("📦 Новый заказ:", orderData);
+            setSuccess(true);
             dispatch(clearCart());
-            
-            console.log("📦 Новый заказ сохранен:", savedOrder);
+
+            setTimeout(() => onClose(), 3000);
         } catch (err) {
-            console.error("Ошибка при оформлении заказа:", err);
+            console.error("Ошибка:", err);
             setErrors({ submit: "Не удалось оформить заказ. Попробуйте позже." });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Обработчик закрытия подтверждения заказа
-    const handleOrderConfirmationClose = () => {
-        setShowOrderConfirmation(false);
-        onClose(); // Закрываем всю форму оформления заказа
-    };
-
-    // Если показываем компонент подтверждения заказа
-    if (showOrderConfirmation && savedOrderData) {
+    // Экран успеха — с анимацией
+    if (success) {
         return (
-            <OrderConfirmation
-                orderData={savedOrderData}
-                onClose={handleOrderConfirmationClose}
-            />
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div
+                    className="bg-white rounded-lg max-w-md w-full p-8 text-center transform transition-all duration-500 ease-out scale-100 opacity-100"
+                >
+                    <div className="text-green-500 text-6xl mb-4">✅</div>
+                    <h2 className="text-2xl font-bold mb-2">Заказ оформлен!</h2>
+                    <p className="text-gray-600 mb-4">Спасибо за покупку.</p>
+                    {!isAuthenticated && (
+                        <p className="text-sm text-yellow-600 mb-2">
+                            Заказ сохранен локально. Авторизуйтесь для синхронизации.
+                        </p>
+                    )}
+                    <p className="text-sm text-gray-500">Окно закроется через 3 секунды...</p>
+                </div>
+            </div>
         );
     }
 
-    // Основная форма оформления заказа
+    // Основная форма — с анимацией появления
     return (
         <>
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="transform transition-all duration-300 ease-out opacity-0 translate-y-4 scale-95 animate-appear">
+                <div
+                    className="transform transition-all duration-300 ease-out opacity-0 translate-y-4 scale-95 animate-appear">
                     <div className="bg-white rounded-lg max-w-md w-full">
                         <form onSubmit={handleSubmit} className="p-6">
                             <h2 className="text-2xl font-bold mb-6">Оформление заказа</h2>
@@ -337,14 +336,11 @@ const CheckoutForm = ({ onClose }) => {
                                         </div>
                                         <Button
                                             type="button"
-                                            variant="outline"
-                                            size="small"
+                                            variant="captcha"
+                                            size="captcha"
                                             onClick={generateCaptcha}
                                             disabled={isSubmitting}
-                                            className="px-3 py-2"
-                                        >
-                                            Обновить
-                                        </Button>
+                                        />
                                     </div>
                                     <Input
                                         type="text"

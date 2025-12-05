@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { authService } from "../services/auth";
-import { mergeOrdersOnAuth } from "../services/orderStorage";
 import Button from "./Ui/Button";
 import Input from "./Ui/Input";
 
 const AuthModal = ({ onClose, onSuccess }) => {
-    const [isLogin, setIsLogin] = useState(true);
+       const [isLogin, setIsLogin] = useState(true);
     const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -32,25 +31,12 @@ const AuthModal = ({ onClose, onSuccess }) => {
             if (isForgotPassword) {
                 await handleForgotPassword();
             } else if (isLogin) {
-                // Вход
                 await authService.login({
                     email: formData.email,
                     password: formData.password
                 });
                 setMessage('Успешный вход!');
-                // Запуск синхронизации заказов после успешного входа
-                setTimeout(async () => {
-                    try {
-                        await mergeOrdersOnAuth();
-                        setMessage('Успешный вход! Заказы синхронизированы.');
-
-                    } catch (syncError) {
-                        console.warn(
-                            'Ошибка при синхронизации заказов:',
-                            syncError
-                        );
-                        setMessage('Успешный вход! (синхронизация заказов не удалась)')
-                    }
+                setTimeout(() => {
                     onSuccess?.();
                     onClose();
                 }, 1000);
@@ -71,19 +57,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
                     phone: formData.phone
                 });
                 setMessage('Регистрация успешна!');
-                
-                // Запуск синхронизации заказов после успешной регистрации
-                setTimeout(async () => {
-                    try {
-                        await mergeOrdersOnAuth();
-                        setMessage('Регистрация успешна! Заказы синхронизированы.');
-                    } catch (syncError) {
-                        console.warn(
-                            'Ошибка при синхронизации заказов:',
-                            syncError
-                        );
-                        setMessage('Регистрация успешна! (синхронизация заказов не удалась)');
-                    }
+                setTimeout(() => {
                     onSuccess?.();
                     onClose();
                 }, 1000);
