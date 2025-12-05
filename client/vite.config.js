@@ -9,8 +9,13 @@ export default defineConfig({
   build: {
     outDir: 'dist'
   },
-  server: {
-    port: 5173,
-    host: true
+    server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   }
 })

@@ -27,7 +27,7 @@ const passwordResetTokens = new Map();
 const ordersDB = new Map(); // Хранилище заказов
 
 app.use(cors({
-  origin: 'http://localhost:3000', // URL фронтенда
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // Оба порта
   credentials: true
 }));
 app.use(express.json());
@@ -247,6 +247,8 @@ app.post('/api/orders', authenticateToken, (req, res) => {
   }
 });
 
+
+
 // Синхронизация локальных заказов
 app.post('/api/orders/sync', authenticateToken, async (req, res) => {
   try {
@@ -278,6 +280,105 @@ app.post('/api/orders/sync', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Sync error:', error);
     res.status(500).json({ error: 'Ошибка синхронизации' });
+  }
+});
+
+// Обновление статуса заказа
+app.patch('/api/orders/:orderId/status', authenticateToken, (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+    
+    // Валидация статуса
+    const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        error: 'Неверный статус заказа',
+        validStatuses 
+      });
+    }
+    
+    const userOrders = ordersDB.get(req.user.userId) || [];
+    const orderIndex = userOrders.findIndex(order => order.id === orderId);
+    
+    if (orderIndex === -1) {
+      return res.status(404).json({ error: 'Заказ не найден' });
+    }
+    
+    // Обновляем статус и дату обновления
+    userOrders[orderIndex] = {
+      ...userOrders[orderIndex],
+      status,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Сохраняем обновленный массив
+    ordersDB.set(req.user.userId, userOrders);
+    
+    console.log(`Order ${orderId} status updated to ${status} for user ${req.user.userId}`);
+    res.json(userOrders[orderIndex]);
+    
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ error: 'Ошибка обновления статуса заказа' });
+  }
+});
+
+// Массовая синхронизация заказов 
+app.post('/api/orders/sync', authenticateToken, (req, res) => {
+  try {
+    const { orders } = req.body;
+    
+    if (!Array.isArray(orders)) {
+      return res.status(400).json({ error: 'Ожидается массив заказов' });
+    }
+    
+    // Инициализируем хранилище для пользователя
+    if (!ordersDB.has(req.user.userId)) {
+      ordersDB.set(req.user.userId, []);
+    }
+    
+    const userOrders = ordersDB.get(req.user.userId);
+    const syncedOrders = [];
+    
+    for (const localOrder of orders) {
+      // Если заказ уже существует (по localId или id), обновляем его
+      const existingIndex = userOrders.findIndex(o => 
+        o.id === localOrder.id || o.localId === localOrder.id
+      );
+      
+      const syncedOrder = {
+        ...localOrder,
+        id: existingIndex !== -1 ? userOrders[existingIndex].id : uuidv4(),
+        userId: req.user.userId,
+        synced: true,
+        syncedAt: new Date().toISOString(),
+        serverSyncedAt: new Date().toISOString()
+      };
+      
+      if (existingIndex !== -1) {
+        userOrders[existingIndex] = syncedOrder;
+      } else {
+        userOrders.push(syncedOrder);
+      }
+      
+      syncedOrders.push(syncedOrder);
+    }
+    
+    // Сохраняем обратно
+    ordersDB.set(req.user.userId, userOrders);
+    
+    console.log(`Synced ${syncedOrders.length} orders for user ${req.user.userId}`);
+    
+    res.json({
+      success: true,
+      syncedOrders,
+      message: `Синхронизировано ${syncedOrders.length} заказов`
+    });
+    
+  } catch (error) {
+    console.error('Sync error:', error);
+    res.status(500).json({ error: 'Ошибка синхронизации заказов' });
   }
 });
 
@@ -339,6 +440,33 @@ app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
   res.status(500).json({ error: 'Internal server error' });
 });
+
+// Создание тестового пользователя при запуске сервера
+//////////////////////////////////////////////////////
+const createTestUser = async () => {
+  const testEmail = 'test@test.com';
+  
+  if (!users.has(testEmail)) {
+    const hashedPassword = await bcrypt.hash('password123', 10);
+    const testUser = {
+      id: uuidv4(),
+      email: testEmail,
+      password: hashedPassword,
+      name: 'Тестовый пользователь',
+      phone: '+79991234567',
+      createdAt: new Date().toISOString()
+    };
+    
+    users.set(testEmail, testUser);
+    console.log('✅ Тестовый пользователь создан:', testEmail);
+    console.log('🔑 Пароль: password123');
+  }
+};
+
+// Вызов функции создания тестового пользователя
+createTestUser();
+//////////////////////////////////////////////////////
+// конец создания тестового пользователя
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
