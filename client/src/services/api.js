@@ -2,8 +2,10 @@ import { mockCategories, mockProducts, mockProductImages, mockProductVariations 
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const API_BASE = '';
-const USE_MOCK_DATA = true; // переключатель между API и MOCK 
+// базовый URL для API
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// 
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false; // переключатель между API и MOCK 
 
 const filterData = (data, filters) => {
     if (!filters) return data;
@@ -49,7 +51,7 @@ export const api = {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/Categories`);
+            const response = await fetch(`${API_BASE}/api/categories`);
             if (!response.ok) throw new Error('API error');
             return await response.json();
         } catch (error) {
@@ -112,7 +114,7 @@ export const api = {
         try {
             const filterStr = encodeURIComponent(JSON.stringify({ product_id: productIds }));
             const response = await fetch(
-                `${API_BASE}/ProductImages?filter=${filterStr}`
+                `${API_BASE}/api/product-images?filter=${filterStr}`
             );
             if (!response.ok) throw new Error('API error');
             return await response.json();
@@ -135,7 +137,7 @@ export const api = {
         try {
             const filterStr = encodeURIComponent(JSON.stringify({ product_id: productIds }));
             const response = await fetch(
-                `${API_BASE}/ProductVariations?filter=${filterStr}`
+                `${API_BASE}/api/product-variations?filter=${filterStr}`
             );
             if (!response.ok) throw new Error('API error');
             return await response.json();
@@ -155,7 +157,7 @@ export const api = {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/Products/${id}`);
+            const response = await fetch(`${API_BASE}/api/products/${id}`);
             if (!response.ok) throw new Error('API error');
             return await response.json();
         } catch (error) {
@@ -163,6 +165,38 @@ export const api = {
             return mockProducts.find(product => product.id === parseInt(id));
         }
     },
+
+        async login(credentials) {
+        const response = await fetch(`${API_BASE}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
+        });
+        if (!response.ok) throw new Error('Login failed');
+        return await response.json();
+    },
+
+    async register(credentials) {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials)
+        });
+        if (!response.ok) throw new Error('Registration failed');
+        return await response.json();
+    },
+
+    async getOrders() {
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE}/api/orders`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        return await response.json();
+    }
 
 }
 
