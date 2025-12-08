@@ -17,7 +17,7 @@ if (!process.env.REFRESH_TOKEN_SECRET || process.env.REFRESH_TOKEN_SECRET.includ
 }
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 
 // Временное хранилище (в продакшене заменим на БД)
 const users = new Map();
@@ -25,11 +25,14 @@ const refreshTokens = new Map();
 const passwordResetTokens = new Map();
 const ordersDB = new Map(); // Хранилище заказов
 
+const allowedOrigins = process.env.CLIENT_URL 
+  ? [process.env.CLIENT_URL, 'http://localhost:5173'] 
+  : ['http://localhost:5173'];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: allowedOrigins,
   credentials: true
 }));
-app.use(express.json());
 
 // Логирование
 app.use((req, res, next) => {
