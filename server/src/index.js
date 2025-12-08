@@ -504,6 +504,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+
+
 // Endpoint для просмотра всех пользователей
 app.get('/api/debug/users', (req, res) => {
   const usersArray = Array.from(users.values()).map(user => ({
@@ -524,6 +526,216 @@ app.get('/api/debug/orders', (req, res) => {
   }
   res.json({ orders: allOrders });
 });
+
+// ============================================
+// ВРЕМЕННЫЕ ЭНДПОИНТЫ ДЛЯ ФРОНТЕНДА (магазин)
+// ============================================
+
+// Категории товаров
+app.get('/api/categories', (req, res) => {
+  res.json([
+    { id: 1, name: 'Электроника', slug: 'electronics' },
+    { id: 2, name: 'Одежда', slug: 'clothing' },
+    { id: 3, name: 'Книги', slug: 'books' },
+    { id: 4, name: 'Дом и сад', slug: 'home-garden' },
+    { id: 5, name: 'Спорт', slug: 'sports' },
+    { id: 6, name: 'Красота', slug: 'beauty' }
+  ]);
+});
+
+// Товары с фильтрацией
+app.get('/api/products', (req, res) => {
+  const { category_id, search, limit = 20, offset = 0 } = req.query;
+  
+  // Моковые товары
+  const mockProducts = Array.from({ length: 50 }, (_, i) => ({
+    id: i + 1,
+    name: `Товар ${i + 1}`,
+    description: `Описание товара ${i + 1}. Это качественный продукт с отличными характеристиками.`,
+    category_id: (i % 6) + 1,
+    rating: (Math.random() * 5).toFixed(1),
+    created_at: new Date(Date.now() - Math.random() * 10000000000).toISOString()
+  }));
+
+  let filteredProducts = mockProducts;
+
+  // Фильтрация по категории
+  if (category_id) {
+    const catId = parseInt(category_id);
+    filteredProducts = filteredProducts.filter(p => p.category_id === catId);
+  }
+
+  // Поиск по названию и описанию
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filteredProducts = filteredProducts.filter(p => 
+      p.name.toLowerCase().includes(searchLower) ||
+      p.description.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // Пагинация
+  const start = parseInt(offset);
+  const end = start + parseInt(limit);
+  const paginatedProducts = filteredProducts.slice(start, end);
+
+  res.json({
+    products: paginatedProducts,
+    total: filteredProducts.length,
+    has_more: end < filteredProducts.length
+  });
+});
+
+// Получение конкретного товара
+app.get('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  
+  // Моковые данные товара
+  const product = {
+    id: parseInt(id),
+    name: `Товар ${id}`,
+    description: `Подробное описание товара ${id}. Это качественный продукт с отличными характеристиками, подходящий для повседневного использования.`,
+    category_id: (parseInt(id) % 6) + 1,
+    specifications: {
+      material: 'Высококачественные материалы',
+      weight: '1.2 кг',
+      dimensions: '30x20x10 см',
+      warranty: '12 месяцев'
+    },
+    created_at: new Date().toISOString()
+  };
+
+  if (id > 100) {
+    return res.status(404).json({ error: 'Товар не найден' });
+  }
+
+  res.json(product);
+});
+
+// Изображения товаров
+app.get('/api/product-images', (req, res) => {
+  const { filter } = req.query;
+  let productIds = [];
+
+  if (filter) {
+    try {
+      const filters = JSON.parse(filter);
+      productIds = filters.product_id || [];
+    } catch (e) {
+      console.error('Error parsing filter:', e);
+    }
+  }
+
+  // Преобразуем строки в числа
+  const numericIds = productIds.map(id => parseInt(id));
+
+  // Моковые изображения
+  const images = [];
+  numericIds.forEach(productId => {
+    // Добавляем 1-3 изображения для каждого товара
+    const count = (productId % 3) + 1;
+    for (let i = 1; i <= count; i++) {
+      images.push({
+        id: productId * 10 + i,
+        product_id: productId,
+        image_url: `https://picsum.photos/seed/product${productId}_${i}/600/400`,
+        is_main: i === 1,
+        order: i
+      });
+    }
+  });
+
+  res.json(images);
+});
+
+// Вариации товаров (цены, размеры, цвета)
+app.get('/api/product-variations', (req, res) => {
+  const { filter } = req.query;
+  let productIds = [];
+
+  if (filter) {
+    try {
+      const filters = JSON.parse(filter);
+      productIds = filters.product_id || [];
+    } catch (e) {
+      console.error('Error parsing filter:', e);
+    }
+  }
+
+  const numericIds = productIds.map(id => parseInt(id));
+
+  // Моковые вариации
+  const variations = numericIds.map(productId => ({
+    id: productId,
+    product_id: productId,
+    sku: `SKU-${productId.toString().padStart(6, '0')}`,
+    price: (Math.random() * 5000 + 100).toFixed(2),
+    old_price: Math.random() > 0.7 ? (Math.random() * 6000 + 150).toFixed(2) : null,
+    stock_quantity: Math.floor(Math.random() * 100),
+    color: ['Красный', 'Синий', 'Черный', 'Белый'][productId % 4],
+    size: ['S', 'M', 'L', 'XL'][productId % 4]
+  }));
+
+  res.json(variations);
+});
+
+// Поиск товаров (расширенный)
+app.get('/api/products/search', (req, res) => {
+  const { q, category, min_price, max_price, sort = 'popular' } = req.query;
+
+  // Моковые результаты поиска
+  const mockResults = Array.from({ length: 20 }, (_, i) => ({
+    id: i + 1000,
+    name: q ? `Результат поиска "${q}" ${i + 1}` : `Товар ${i + 1}`,
+    description: `Описание для поискового результата ${i + 1}`,
+    category_id: (i % 6) + 1,
+    price: (Math.random() * 5000 + 100).toFixed(2),
+    image_url: `https://picsum.photos/seed/search${i}/300/200`,
+    rating: (Math.random() * 5).toFixed(1),
+    review_count: Math.floor(Math.random() * 100)
+  }));
+
+  let filtered = mockResults;
+
+  // Применяем фильтры
+  if (category) {
+    const catId = parseInt(category);
+    filtered = filtered.filter(p => p.category_id === catId);
+  }
+
+  if (min_price) {
+    const min = parseFloat(min_price);
+    filtered = filtered.filter(p => parseFloat(p.price) >= min);
+  }
+
+  if (max_price) {
+    const max = parseFloat(max_price);
+    filtered = filtered.filter(p => parseFloat(p.price) <= max);
+  }
+
+  // Сортировка
+  if (sort === 'price_asc') {
+    filtered.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+  } else if (sort === 'price_desc') {
+    filtered.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+  } else if (sort === 'rating') {
+    filtered.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+  }
+
+  res.json({
+    results: filtered,
+    total: filtered.length,
+    query: q,
+    filters_applied: {
+      category,
+      price_range: min_price || max_price ? `${min_price || '0'}-${max_price || '∞'}` : null
+    }
+  });
+});
+
+// ============================================
+// КОНЕЦ ВРЕМЕННЫХ ЭНДПОИНТОВ
+// ============================================
 
 // Middleware для обработки 404 ошибок
 app.use('/api/*', (req, res) => {
