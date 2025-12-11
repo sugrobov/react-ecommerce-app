@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { authService } from "../services/auth";
+// import { authService } from "../services/auth";
+import api from "../services/api";
 import Button from "./Ui/Button";
 import Input from "./Ui/Input";
 
 const AuthModal = ({ onClose, onSuccess }) => {
-       const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(true);
     const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -31,7 +32,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
             if (isForgotPassword) {
                 await handleForgotPassword();
             } else if (isLogin) {
-                await authService.login({
+                await api.login({
                     email: formData.email,
                     password: formData.password
                 });
@@ -50,7 +51,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
                     throw new Error('Пароль должен содержать минимум 6 символов');
                 }
 
-                await authService.register({
+                await api.register({
                     name: formData.name,
                     email: formData.email,
                     password: formData.password,

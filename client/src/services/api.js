@@ -3,7 +3,7 @@ import { mockCategories, mockProducts, mockProductImages, mockProductVariations 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // базовый URL для API
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 // 
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || false; // переключатель между API и MOCK 
 
@@ -166,7 +166,7 @@ export const api = {
         }
     },
 
-        async login(credentials) {
+    async login(credentials) {
         const response = await fetch(`${API_BASE}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -195,6 +195,16 @@ export const api = {
             }
         });
         if (!response.ok) throw new Error('Failed to fetch orders');
+        return await response.json();
+    },
+
+    async forgotPassword(email) {
+        const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        if (!response.ok) throw new Error('Forgot password failed');
         return await response.json();
     }
 
