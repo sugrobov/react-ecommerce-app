@@ -19,6 +19,8 @@ if (!process.env.REFRESH_TOKEN_SECRET || process.env.REFRESH_TOKEN_SECRET.includ
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.use(express.json());
+
 // Временное хранилище (в продакшене заменим на БД)
 const users = new Map();
 const refreshTokens = new Map();
