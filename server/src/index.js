@@ -7,6 +7,61 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
+// ФУНКЦИЯ МИГРАЦИИ БАЗЫ ДАННЫХ
+async function runMigration() {
+    console.log('🚀 Запуск миграции базы данных...');
+    try {
+        // Импортируем query динамически (чтобы избежать циклических зависимостей)
+        const { query } = await import('./db.js');
+        
+        // 1. Создаем таблицу products
+        await query(`
+            CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                price DECIMAL(10, 2) NOT NULL,
+                category_id INTEGER,
+                image_url VARCHAR(500),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('✅ Таблица "products" создана или уже существует.');
+
+        // 2. Создаем таблицу categories
+        await query(`
+            CREATE TABLE IF NOT EXISTS categories (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE
+            );
+        `);
+        console.log('✅ Таблица "categories" создана или уже существует.');
+
+        // 3. Заполняем categories тестовыми данными
+        const catResult = await query('SELECT COUNT(*) FROM categories');
+        if (parseInt(catResult.rows[0].count) === 0) {
+            await query(`
+                INSERT INTO categories (name) VALUES
+                ('Электроника'),
+                ('Одежда'),
+                ('Книги'),
+                ('Для дома'),
+                ('Спорт')
+            `);
+            console.log('✅ Тестовые категории добавлены.');
+        }
+
+        console.log('🎉 Миграция успешно завершена!');
+    } catch (error) {
+        console.error('❌ Ошибка миграции:', error.message);
+        // Не останавливаем сервер, продолжаем работу
+    }
+}
+
+// Запускаем миграцию при старте
+runMigration();
+
 // Проверка секретных ключей
 if (!process.env.ACCESS_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET.includes('your-secret-key')) {
   console.warn('WARNING: Using default ACCESS_TOKEN_SECRET. In production, set a secure secret in .env file');
