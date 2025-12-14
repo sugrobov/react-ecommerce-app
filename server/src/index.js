@@ -62,6 +62,14 @@ async function runMigration() {
 // Запускаем миграцию при старте
 runMigration();
 
+// === ЛОГИРОВАНИЕ КОНФИГУРАЦИИ СРЕДЫ ===
+console.log('🚀 Запуск сервера...');
+console.log('🔍 NODE_ENV:', process.env.NODE_ENV || 'development');
+console.log('🔍 PORT:', process.env.PORT || 5000);
+console.log('🔍 CLIENT_URL:', process.env.CLIENT_URL || 'http://localhost:5173');
+console.log('🔍 SSL config:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled');
+console.log('🔍 Database migration:', process.env.DISABLE_MIGRATION ? 'disabled' : 'enabled');
+
 // Проверка секретных ключей
 if (!process.env.ACCESS_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET.includes('your-secret-key')) {
   console.warn('WARNING: Using default ACCESS_TOKEN_SECRET. In production, set a secure secret in .env file');
