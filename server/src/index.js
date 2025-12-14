@@ -7,6 +7,19 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
+// Определение базового URL
+const getBaseUrl = () => {
+  if (process.env.RENDER_EXTERNAL_URL) {
+    return process.env.RENDER_EXTERNAL_URL;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return `https://${process.env.HOST || 'localhost'}:${PORT}`;
+  }
+  return `http://localhost:${PORT}`;
+};
+
+const BASE_URL = getBaseUrl();
+
 // ФУНКЦИЯ МИГРАЦИИ БАЗЫ ДАННЫХ
 async function runMigration() {
     console.log('🚀 Запуск миграции базы данных...');
@@ -66,9 +79,11 @@ runMigration();
 console.log('🚀 Запуск сервера...');
 console.log('🔍 NODE_ENV:', process.env.NODE_ENV || 'development');
 console.log('🔍 PORT:', process.env.PORT || 5000);
+console.log('🔍 HOST:', process.env.HOST || 'localhost');
+console.log('🔍 BASE_URL:', BASE_URL);
 console.log('🔍 CLIENT_URL:', process.env.CLIENT_URL || 'http://localhost:5173');
+console.log('🔍 RENDER_EXTERNAL_URL:', process.env.RENDER_EXTERNAL_URL || 'not set');
 console.log('🔍 SSL config:', process.env.NODE_ENV === 'production' ? 'enabled' : 'disabled');
-console.log('🔍 Database migration:', process.env.DISABLE_MIGRATION ? 'disabled' : 'enabled');
 
 // Проверка секретных ключей
 if (!process.env.ACCESS_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET.includes('your-secret-key')) {
@@ -838,11 +853,19 @@ const createTestUser = async () => {
 createTestUser();
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
-  console.log(`Test endpoint: http://localhost:${PORT}/api/test`);
-  console.log('Эндпоинты:');
-  console.log(`  - POST /api/auth/login`);
-  console.log(`  - POST /api/orders/sync (массовая синхронизация)`);
-  console.log(`  - POST /api/orders/cleanup (очистка дубликатов)`);
+  const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+  console.log(`🔗 Локальный доступ: http://localhost:${PORT}`);
+  
+  if (process.env.RENDER_EXTERNAL_URL) {
+    console.log(`🌐 Внешний URL: ${process.env.RENDER_EXTERNAL_URL}`);
+  }
+  
+  console.log(`🏥 Health check: ${serverUrl}/api/health`);
+  console.log(`🧪 Тестовый эндпоинт: ${serverUrl}/api/test`);
+  console.log('📚 Основные эндпоинты:');
+  console.log(`  - POST ${serverUrl}/api/auth/login`);
+  console.log(`  - POST ${serverUrl}/api/orders/sync`);
+  console.log(`  - POST ${serverUrl}/api/orders/cleanup`);
 });
