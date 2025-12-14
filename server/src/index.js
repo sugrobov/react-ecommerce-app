@@ -817,6 +817,45 @@ app.get('/api/products/search', (req, res) => {
 // КОНЕЦ ВРЕМЕННЫХ ЭНДПОИНТОВ
 // ============================================
 
+// ============================================
+// ОБРАБОТЧИК КОРНЕВОГО ПУТИ
+// ============================================
+
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Добро пожаловать в API интернет-магазина!',
+    version: '1.0.0',
+    status: 'Сервер работает',
+    timestamp: new Date().toISOString(),
+    documentation: {
+      auth: '/api/auth/*',
+      orders: '/api/orders/*',
+      products: '/api/products/*',
+      categories: '/api/categories',
+      health: '/api/health',
+      test: '/api/test'
+    },
+    endpoints: [
+      { method: 'GET', path: '/api/health', description: 'Проверка состояния сервера' },
+      { method: 'GET', path: '/api/test', description: 'Тестовый эндпоинт' },
+      { method: 'POST', path: '/api/auth/login', description: 'Вход в систему' },
+      { method: 'POST', path: '/api/auth/register', description: 'Регистрация' },
+      { method: 'POST', path: '/api/orders/sync', description: 'Синхронизация заказов' },
+      { method: 'GET', path: '/api/categories', description: 'Получить категории товаров' },
+      { method: 'GET', path: '/api/products', description: 'Получить товары' }
+    ],
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// ============================================
+// Middleware для обработки 404 ошибок
+// ============================================
+
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
 // Middleware для обработки 404 ошибок
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
@@ -855,17 +894,25 @@ createTestUser();
 app.listen(PORT, () => {
   const serverUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
   
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
-  console.log(`🔗 Локальный доступ: http://localhost:${PORT}`);
+  console.log('='.repeat(60));
+  console.log('🚀 Сервер успешно запущен!');
+  console.log('='.repeat(60));
+  console.log(`🔗 Основной URL: ${serverUrl}`);
+  console.log(`🏠 Локальный URL: http://localhost:${PORT}`);
   
-  if (process.env.RENDER_EXTERNAL_URL) {
-    console.log(`🌐 Внешний URL: ${process.env.RENDER_EXTERNAL_URL}`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🌍 Окружение: Production');
+    console.log(`🔒 SSL: Включен (HTTPS)`);
+  } else {
+    console.log('💻 Окружение: Development');
+    console.log('⚠️  SSL: Отключен (HTTP)');
   }
   
-  console.log(`🏥 Health check: ${serverUrl}/api/health`);
-  console.log(`🧪 Тестовый эндпоинт: ${serverUrl}/api/test`);
-  console.log('📚 Основные эндпоинты:');
-  console.log(`  - POST ${serverUrl}/api/auth/login`);
-  console.log(`  - POST ${serverUrl}/api/orders/sync`);
-  console.log(`  - POST ${serverUrl}/api/orders/cleanup`);
+  console.log('='.repeat(60));
+  console.log('📋 Доступные эндпоинты:');
+  console.log(`  ${serverUrl}/              - Главная страница`);
+  console.log(`  ${serverUrl}/api/health    - Проверка состояния`);
+  console.log(`  ${serverUrl}/api/auth/login - Аутентификация`);
+  console.log(`  ${serverUrl}/api/orders/sync - Синхронизация заказов`);
+  console.log('='.repeat(60));
 });
