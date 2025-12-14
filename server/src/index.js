@@ -7,6 +7,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 dotenv.config();
 
+const app = express();
+const PORT = process.env.PORT || 5000;
+
 // Определение базового URL
 const getBaseUrl = () => {
   if (process.env.RENDER_EXTERNAL_URL) {
@@ -93,9 +96,6 @@ if (!process.env.ACCESS_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET.includes
 if (!process.env.REFRESH_TOKEN_SECRET || process.env.REFRESH_TOKEN_SECRET.includes('your-secret-key')) {
   console.warn('WARNING: Using default REFRESH_TOKEN_SECRET. In production, set a secure secret in .env file');
 }
-
-const app = express();
-const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 
@@ -856,10 +856,6 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// Middleware для обработки 404 ошибок
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: 'API endpoint not found' });
-});
 
 // Middleware для обработки ошибок
 app.use((error, req, res, next) => {
