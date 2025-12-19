@@ -15,9 +15,12 @@ const getBaseUrl = () => {
   if (process.env.RENDER_EXTERNAL_URL) {
     return process.env.RENDER_EXTERNAL_URL;
   }
-  if (process.env.NODE_ENV === 'production') {
-    return `https://${process.env.HOST || 'localhost'}:${PORT}`;
+    // В production без Render.com URL
+  if (process.env.NODE_ENV === 'production' && process.env.HOST) {
+    return `https://${process.env.HOST}`;
   }
+  
+  // Локальная разработка
   return `http://localhost:${PORT}`;
 };
 
