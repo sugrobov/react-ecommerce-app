@@ -4,6 +4,7 @@ import { api } from "../services/api";
 import Button from "./Ui/Button";
 import Input from "./Ui/Input";
 
+
 const AuthModal = ({ onClose, onSuccess }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -19,6 +20,11 @@ const AuthModal = ({ onClose, onSuccess }) => {
         phone: ''
     });
 
+    // Убрать в продакшене
+    const isDevelopment = import.meta.env.DEV;
+
+     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -27,6 +33,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
         e.preventDefault();
         setLoading(true);
         setError('');
+        setMessage('');
 
         try {
             if (isForgotPassword) {
@@ -51,6 +58,12 @@ const AuthModal = ({ onClose, onSuccess }) => {
                     throw new Error('Пароль должен содержать минимум 6 символов');
                 }
 
+                // Валидация email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(formData.email)) {
+                    throw new Error('Введите корректный email');
+                }
+
                 await api.register({
                     name: formData.name,
                     email: formData.email,
@@ -64,7 +77,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 }, 1000);
             }
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Произошла ошибка. Попробуйте еще раз.');
         } finally {
             setLoading(false);
         }
@@ -72,7 +85,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
     const handleForgotPassword = async () => {
         try {
-            const response = await fetch('/api/auth/forgot-password', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: formData.email })
@@ -266,7 +279,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
                 </div>
 
                 {/* Демо-данные для тестирования */}
-                {process.env.NODE_ENV === 'development' && isLogin && (
+                {isDevelopment && import.meta.env.VITE_USE_MOCK_DATA === 'true' && isLogin && (
                     <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
                         <p className="font-semibold mb-1">Демо-аккаунты:</p>
                         <p>test@test.com / password123</p>
