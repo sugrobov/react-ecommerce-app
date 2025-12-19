@@ -1,4 +1,5 @@
 import localForage from 'localforage';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const authStorage = localForage.createInstance({
@@ -37,13 +38,11 @@ class AuthService {
       });
 
       if (!response.ok) {
-        // Пытаемся получить детальную ошибку от сервера
         let errorMessage = 'Ошибка авторизации';
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
         } catch (e) {
-          // Если не удалось распарсить JSON
           errorMessage = `HTTP ошибка: ${response.status}`;
         }
         throw new Error(errorMessage);
@@ -53,12 +52,11 @@ class AuthService {
       await this.setAuth(data);
       return data;
     } catch (error) {
-      // Обработка сетевых ошибок
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === 'TypeError' && 
+          (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
         throw new Error('Нет соединения с сервером. Проверьте подключение к интернету.');
       }
       
-      // Обработка других ошибок
       if (error.name === 'AbortError') {
         throw new Error('Запрос был отменен');
       }
@@ -69,7 +67,6 @@ class AuthService {
 
   async register(userData) {
     try {
-      // Валидация на клиенте
       if (userData.password.length < 6) {
         throw new Error('Пароль должен содержать минимум 6 символов');
       }
@@ -95,7 +92,8 @@ class AuthService {
       await this.setAuth(data);
       return data;
     } catch (error) {
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === 'TypeError' && 
+          (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
         throw new Error('Нет соединения с сервером. Проверьте подключение к интернету.');
       }
       throw error;
@@ -109,7 +107,6 @@ class AuthService {
       await authStorage.removeItem('auth');
     } catch (error) {
       console.error('Ошибка при выходе:', error);
-      // Даже если произошла ошибка, очищаем локальные данные
       this.token = null;
       this.user = null;
     }
@@ -137,7 +134,6 @@ class AuthService {
           errorMessage = `HTTP ошибка: ${response.status}`;
         }
         
-        // Если refresh token невалиден, делаем логаут
         if (response.status === 403) {
           await this.logout();
         }
@@ -153,12 +149,12 @@ class AuthService {
 
       return accessToken;
     } catch (error) {
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === 'TypeError' && 
+          (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
         throw new Error('Нет соединения с сервером');
       }
       
-      // Если не удалось обновить токен, делаем логаут
-      if (error.message.includes('refresh token')) {
+      if (error.message.includes('refresh token') || error.message.includes('refreshToken')) {
         await this.logout();
       }
       
@@ -191,14 +187,12 @@ class AuthService {
     return !!this.token;
   }
 
-    // Вспомогательный метод для проверки состояния аутентификации
   async checkAuthStatus() {
     if (!this.token) {
       return { authenticated: false, reason: 'No token' };
     }
 
     try {
-      // Проверяем валидность токена, отправляя тестовый запрос
       const response = await fetch(`${API_BASE}/api/auth/test`, {
         headers: this.getAuthHeader()
       });
@@ -206,11 +200,10 @@ class AuthService {
       if (response.ok) {
         return { authenticated: true };
       } else if (response.status === 401 || response.status === 403) {
-        // Токен истек или невалиден
         try {
           await this.refreshToken();
           return { authenticated: true, refreshed: true };
-        } catch (refreshError) {
+        } catch (_error) { 
           await this.logout();
           return { authenticated: false, reason: 'Token refresh failed' };
         }
@@ -218,17 +211,16 @@ class AuthService {
         return { authenticated: false, reason: `Server error: ${response.status}` };
       }
     } catch (error) {
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      if (error.name === 'TypeError' && 
+          (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
         return { authenticated: false, reason: 'Network error' };
       }
       return { authenticated: false, reason: error.message };
     }
   }
 
-    // Метод для безопасного выполнения запросов с автоматическим обновлением токена
   async authFetch(url, options = {}) {
     try {
-      // Первая попытка с текущим токеном
       const response = await fetch(url, {
         ...options,
         headers: {
@@ -237,12 +229,10 @@ class AuthService {
         }
       });
 
-      // Если токен истек, пытаемся обновить
       if (response.status === 401 || response.status === 403) {
         try {
           await this.refreshToken();
           
-          // Повторяем запрос с новым токеном
           const retryResponse = await fetch(url, {
             ...options,
             headers: {
@@ -252,18 +242,22 @@ class AuthService {
           });
           
           return retryResponse;
-        } catch (refreshError) {
-          // Если не удалось обновить токен, выбрасываем ошибку
+        } catch (_error) { 
           throw new Error('Authentication required');
         }
       }
 
       return response;
     } catch (error) {
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('Network error');
+      if (error.name === 'TypeError' && 
+          (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+        throw new Error('Ошибка сети. Проверьте подключение к интернету.');
+      } else if (error.message === 'Authentication required') {
+        throw error;
+      } else {
+        console.error('Unknown error in authFetch:', error);
+        throw new Error('Произошла неизвестная ошибка');
       }
-      throw error;
     }
   }
 }
