@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import Content from "../components/Ui/Content";
 import ProductPage from "../components/ProductPage";
 import OrdersPage from "../components/OrdersPage";
+import FavoritesPage from "../components/FavoritesPage";
 
 const HomePage = () => {
     const { selectedCategory, searchQuery } = useSelector(state => state.ui);
@@ -14,7 +15,7 @@ export const ROUTES = {
     HOME: '/',
     PRODUCT: '/product/:id',
     ORDERPAGE: '/orders',
-
+    FAVORITES: '/favorites',
 }
 
 export const routes = [
@@ -32,6 +33,11 @@ export const routes = [
         path: ROUTES.ORDERPAGE,
         element: <OrdersPage />,
         label: 'Заказы'
+    },
+    {
+        path: ROUTES.FAVORITES,
+        element: <FavoritesPage />,
+        label: 'Избранное'
     }
 ];
 
