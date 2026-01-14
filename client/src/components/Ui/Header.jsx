@@ -9,7 +9,7 @@ const Header = ({ onCartClick, onMenuToggle }) => {
     const dispatch = useDispatch();
     // const { searchQuery } = useSelector(state => state.ui);
 
-    // Обработчик поиска - используем useCallback для оптимизации 
+    // Обработчик поиска - используем useCallback для оптимизации
     const { items } = useSelector(state => state.cart); // Получаем товары из корзины
     // Вычисляем общее количество товаров в корзине
     const totalItems = items.reduce((total, item) => total + item.quantity, 0);
@@ -41,6 +41,17 @@ const Header = ({ onCartClick, onMenuToggle }) => {
                         <div className="hidden sm:block">
                             <SearchBar onSearch={handleSearch} />
                         </div>
+                        {/* Кнопка избранного */}
+                        <Link to="/favorites">
+                            <Button
+                                variant="outline"
+                                size="small"
+                                className="text-sm px-3"
+                            >
+                                Избранное
+                            </Button>
+                        </Link>
+
                         {/* Кнопка заказов */}
                         <Link to="/orders">
                             <Button
