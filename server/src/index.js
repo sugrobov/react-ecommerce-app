@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -15,7 +15,7 @@ const getBaseUrl = () => {
   if (process.env.RENDER_EXTERNAL_URL) {
     return process.env.RENDER_EXTERNAL_URL;
   }
-    // В production без Render.com URL
+  // В production без Render.com URL
   if (process.env.NODE_ENV === 'production' && process.env.HOST) {
     return `https://${process.env.HOST}`;
   }
@@ -108,8 +108,8 @@ const refreshTokens = new Map();
 const passwordResetTokens = new Map();
 const ordersDB = new Map(); // Хранилище заказов
 
-const allowedOrigins = process.env.CLIENT_URL 
-  ? [process.env.CLIENT_URL, 'http://localhost:5173'] 
+const allowedOrigins = process.env.CLIENT_URL
+  ? [process.env.CLIENT_URL, 'http://localhost:5173']
   : ['http://localhost:5173'];
 
 app.use(cors({
@@ -138,57 +138,6 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
-// Регистрация
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { email, password, name, phone } = req.body;
-
-    if (users.has(email)) {
-      return res.status(400).json({ error: 'Пользователь уже существует' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = {
-      id: uuidv4(),
-      email,
-      password: hashedPassword,
-      name,
-      phone,
-      createdAt: new Date().toISOString()
-    };
-
-    users.set(email, user);
-
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.ACCESS_TOKEN_SECRET || 'your-secret-key',
-      { expiresIn: '15m' }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: user.id },
-      process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key',
-      { expiresIn: '7d' }
-    );
-
-    refreshTokens.set(refreshToken, user.id);
-
-    res.json({
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phone: user.phone
-      }
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
 
 // Вход
 app.post('/api/auth/login', async (req, res) => {
@@ -579,15 +528,13 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Endpoint для проверки сервера
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'Server is running',
-    usersCount: users.size,
-    ordersCount: Array.from(ordersDB.values()).flat().length
+    timestamp: new Date().toISOString()
   });
 });
-
-
 
 // Endpoint для просмотра всех пользователей
 app.get('/api/debug/users', (req, res) => {
@@ -651,7 +598,7 @@ app.get('/api/products', (req, res) => {
   // Поиск по названию и описанию
   if (search) {
     const searchLower = search.toLowerCase();
-    filteredProducts = filteredProducts.filter(p => 
+    filteredProducts = filteredProducts.filter(p =>
       p.name.toLowerCase().includes(searchLower) ||
       p.description.toLowerCase().includes(searchLower)
     );
@@ -859,7 +806,6 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-
 // Middleware для обработки ошибок
 app.use((error, req, res, next) => {
   console.error('Unhandled error:', error);
@@ -901,7 +847,7 @@ app.listen(PORT, () => {
   
   if (process.env.NODE_ENV === 'production') {
     console.log('🌍 Окружение: Production');
-    console.log(`🔒 SSL: Включен (HTTPS)`);
+    console.log('🔒 SSL: Включен (HTTPS)');
   } else {
     console.log('💻 Окружение: Development');
     console.log('⚠️  SSL: Отключен (HTTP)');
