@@ -668,7 +668,7 @@ app.get('/api/product-images', (req, res) => {
       images.push({
         id: productId * 10 + i,
         product_id: productId,
-        image_url: `https://picsum.photos/seed/product${productId}_${i}/600/400`,
+        image_url: `https://placehold.co/600x400?text=Product+${productId}_${i}`,
         is_main: i === 1,
         order: i
       });
@@ -720,7 +720,7 @@ app.get('/api/products/search', (req, res) => {
     description: `Описание для поискового результата ${i + 1}`,
     category_id: (i % 6) + 1,
     price: (Math.random() * 5000 + 100).toFixed(2),
-    image_url: `https://picsum.photos/seed/search${i}/300/200`,
+    image_url: `https://placehold.co/300x200?text=Search+Result+${i}`,
     rating: (Math.random() * 5).toFixed(1),
     review_count: Math.floor(Math.random() * 100)
   }));
